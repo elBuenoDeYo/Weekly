@@ -913,7 +913,7 @@ function row(t, d, o = {}) {
   const today = todayStr(), flex = t.type === 'flex';
   const done = isDone(t, d);
   const mine = effectiveOwner(t, d) === ME();
-  const canCheck = mine && (flex ? mondayOf(today) >= d : d <= today);
+  const canCheck = mine && (o.allowFuture ? true : (flex ? mondayOf(today) >= d : d <= today));
   const late = !done && (flex ? addDays(d, 6) < today : d < today);
   const pop = ui.pop && ui.pop === doneKey(t, d);
   const lbl = `${esc(t.title)}`;
@@ -1014,14 +1014,14 @@ function viewWeek(which) {
       <button class="btn btn-soft btn-sm" data-act="week" data-d="0" data-w="${which}">Hoy</button>
       <button class="icon-btn" data-act="week" data-d="1" data-w="${which}" aria-label="Semana siguiente">${ICON.right}</button>
       <button class="btn btn-primary btn-sm" data-act="new" data-owner="${slot}">${ICON.plus}<span>Nueva</span></button></div></section>`;
-  if (flex.length) html += `<div style="--i:1"><div class="sec-h" style="margin-top:4px"><h2>Cuando quieras esta semana</h2><span class="muted">${flex.filter(t => isDone(t, mon)).length}/${flex.length}</span></div>${tasksUL(flex, mon, {})}<div style="height:16px"></div></div>`;
+  if (flex.length) html += `<div style="--i:1"><div class="sec-h" style="margin-top:4px"><h2>Cuando quieras esta semana</h2><span class="muted">${flex.filter(t => isDone(t, mon)).length}/${flex.length}</span></div>${tasksUL(flex, mon, { allowFuture: true })}<div style="height:16px"></div></div>`;
   html += `<div class="week" style="--i:2">${days.map(d => {
     const ts = tasksFor(slot, d), st = dayStats(slot, d);
     return `<section class="day${d === today ? ' today' : ''}${d < today ? ' past' : ''}" aria-label="${DOW[wd(d)]} ${parseD(d).getDate()}">
       <div class="day-h"><span class="dw">${DOW3[wd(d)]}</span><span class="num">${parseD(d).getDate()}</span>
         <span class="cnt">${st.total ? st.done + '/' + st.total : ''}</span>
         <button class="mini-add" data-act="new" data-owner="${slot}" data-date="${d}" aria-label="Añadir tarea el ${fmtShort(d)}">${ICON.plus}</button></div>
-      ${ts.length ? tasksUL(ts, d, {}) : '<p class="free">Libre</p>'}</section>`;
+      ${ts.length ? tasksUL(ts, d, { allowFuture: true }) : '<p class="free">Libre</p>'}</section>`;
   }).join('')}</div>`;
   return html;
 }
