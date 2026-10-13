@@ -1,0 +1,1710 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F4ECDF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Pacto — planificador semanal compartido para dos, con tareas, revisión diaria y copias de seguridad.">
+<meta name="application-name" content="Pacto">
+<title>Pacto · planificador de dos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='16' r='9' fill='%23B07A3E'/%3E%3Ccircle cx='20' cy='16' r='9' fill='%236F7F5B' fill-opacity='.85'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+/* Tema antes del primer pintado (evita parpadeos) */
+(function(){
+  var pref='auto';
+  try{ pref=localStorage.getItem('pacto.theme')||'auto'; }catch(e){}
+  var dark = pref==='dark' || (pref==='auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  var r=document.documentElement; r.dataset.theme=dark?'dark':'light'; r.dataset.pref=pref;
+  var m=document.querySelector('meta[name=theme-color]'); if(m) m.content=dark?'#17100C':'#F4ECDF';
+})();
+</script>
+<style>
+:root{
+  --display:'Fraunces','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --ui:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --bg:#F4ECDF; --bg-2:#EADFCC; --surface:#FBF7EF; --surface-2:#F2E8D7;
+  --ink:#2B1E15; --ink-2:#5E4939; --ink-3:#8D7966;
+  --line:rgba(43,30,21,.11); --line-2:rgba(43,30,21,.22);
+  --accent:#7B4F2D; --accent-2:#5F3B21; --accent-ink:#FFF8EC;
+  --a:#B07A3E; --b:#6F7F5B;
+  --danger:#9B3B2B; --ok:#5E7B4A;
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset,0 14px 34px -18px rgba(70,40,15,.35);
+  --grain:.30; --blend:multiply;
+}
+[data-theme=dark]{
+  --bg:#17100C; --bg-2:#201611; --surface:#261A14; --surface-2:#30221A;
+  --ink:#F2E7D5; --ink-2:#CDB89E; --ink-3:#917E6B;
+  --line:rgba(242,231,213,.09); --line-2:rgba(242,231,213,.2);
+  --accent:#D1A06A; --accent-2:#E2B887; --accent-ink:#1B110B;
+  --a:#D4A35F; --b:#9DB087;
+  --danger:#D9806C; --ok:#9DB87F;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 14px 34px -18px rgba(0,0,0,.7);
+  --grain:.10; --blend:screen;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{font-family:var(--ui);background:var(--bg);color:var(--ink);line-height:1.45;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:var(--grain);mix-blend-mode:var(--blend);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .24  0 0 0 0 .14  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.muted{color:var(--ink-3);font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+#app{position:relative;z-index:1}
+.top{display:flex;align-items:center;justify-content:space-between;max-width:1240px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 18px 6px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:24px;letter-spacing:-.01em;font-weight:500}
+.logo{position:relative;width:30px;height:22px;display:inline-block}
+.logo::before,.logo::after{content:"";position:absolute;top:0;width:22px;height:22px;border-radius:50%}
+.logo::before{left:0;background:var(--a)}
+.logo::after{right:0;background:var(--b);opacity:.85;mix-blend-mode:multiply}
+[data-theme=dark] .logo::after{mix-blend-mode:screen;opacity:.7}
+.top-r{display:flex;align-items:center;gap:8px}
+.sync{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-3);padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.sync.on i{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+.sync.busy i{background:var(--a);animation:pulse 1.2s infinite}
+.sync.off i{background:var(--danger)}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink-2);transition:.2s}
+.icon-btn:hover{border-color:var(--line-2);color:var(--ink)}
+
+#nav{position:fixed;left:12px;right:12px;bottom:max(10px,env(safe-area-inset-bottom));z-index:30;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px;border-radius:24px;border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow)}
+#nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;border:0;background:transparent;border-radius:18px;color:var(--ink-3);font-size:11px;font-weight:500;min-width:0;transition:.2s}
+#nav button span.lbl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#nav button[aria-current=page]{background:var(--bg-2);color:var(--ink)}
+#nav button[aria-current=page] svg{stroke:var(--accent)}
+.badge{position:absolute;top:3px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.fab{position:fixed;right:18px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:31;width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 14px 28px -10px rgba(70,35,10,.6);transition:transform .2s}
+.fab:active{transform:scale(.93)}
+.fab svg{width:26px;height:26px;stroke-width:2}
+#app.ob #nav,#app.ob .fab,#app.ob .top-r{display:none}
+
+main#view{position:relative;max-width:1240px;margin:0 auto;padding:10px 18px 150px}
+main#view.enter>*{animation:rise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:-.015em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+.card h3{font-size:21px;margin-bottom:6px}
+.stack{display:grid;gap:18px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:26px 2px 12px}
+.sec-h h2{font-size:26px;font-weight:350}
+.sec-h .muted{font-size:13px}
+
+/* Hero */
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:14px 2px 6px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.hero-day{font-size:clamp(56px,15vw,118px);font-weight:300;font-style:italic;line-height:.9;letter-spacing:-.035em;margin:10px 0 6px}
+.hero-date{font-family:var(--display);font-size:clamp(18px,3.4vw,24px);color:var(--ink-2);font-weight:350;padding-bottom:16px}
+.ring{position:relative;width:104px;height:104px;flex:none;margin-bottom:14px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:6}
+.ring .tr{stroke:var(--line-2)}
+.ring .pg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
+.ring-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring-c b{font-family:var(--display);font-size:30px;font-weight:400;line-height:1}
+.ring-c span{font-size:10.5px;color:var(--ink-3);margin-top:3px;max-width:62px;line-height:1.15}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+.stat{padding:12px 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface)}
+.balance{margin:16px 0 24px;padding:17px 18px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 7%,var(--surface)),var(--surface) 54%,color-mix(in srgb,var(--b) 8%,var(--surface)));box-shadow:var(--shadow)}
+.balance-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:13px}
+.balance-head h3{font-size:21px;margin-top:2px}
+.balance-head .tag{white-space:nowrap}
+.balance-people{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.balance-person{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:15px;background:color-mix(in srgb,var(--surface) 82%,transparent)}
+.balance-id{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px;font-weight:500}
+.balance-id span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.balance-dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.balance-person strong{font-family:var(--display);font-size:23px;font-weight:400;white-space:nowrap}
+.balance-person small{font:500 11px var(--ui);color:var(--ink-3)}
+.balance-track{display:flex;gap:3px;height:8px;overflow:hidden;border-radius:99px;background:var(--bg-2);margin-top:13px}
+.balance-track span{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+.balance-a{background:var(--a)}.balance-b{background:var(--b)}
+.balance-note{font-size:13px;color:var(--ink-2);margin-top:10px}
+.balance-note span{color:var(--ink-3)}
+.stat b{display:block;font-family:var(--display);font-size:26px;font-weight:400;line-height:1.1}
+.stat span{font-size:12px;color:var(--ink-3)}
+
+/* Alertas */
+.alerts{display:grid;gap:10px;margin:16px 0 0}
+.alert{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:18px;border:1px solid color-mix(in srgb,var(--danger) 38%,transparent);background:color-mix(in srgb,var(--danger) 9%,var(--surface))}
+.alert.soft{border-color:var(--line);background:var(--surface)}
+.alert b{display:block;font-weight:600;font-size:15px}
+.alert span{font-size:13px;color:var(--ink-3)}
+
+/* Tareas */
+.tasks{list-style:none;display:grid;gap:8px}
+.task{display:flex;align-items:center;gap:12px;padding:11px 14px 11px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);transition:border-color .2s,background .2s;position:relative}
+.task::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--c,var(--accent));opacity:.9}
+.task:hover{border-color:var(--line-2)}
+.check{width:30px;height:30px;border-radius:50%;border:1.6px solid var(--line-2);background:transparent;color:transparent;display:grid;place-items:center;flex:none;transition:.25s}
+.check:hover{border-color:var(--c,var(--accent))}
+.check svg,.mark svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.check svg path,.mark svg path{stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .35s .05s}
+.mark{width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--line-2);display:grid;place-items:center;flex:none;color:transparent}
+.is-done .check,.is-done .mark{background:var(--c,var(--accent));border:1.6px solid var(--c,var(--accent));color:var(--accent-ink)}
+.is-done .check path,.is-done .mark path{stroke-dashoffset:0}
+.is-done .t-title{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.is-late{border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+.is-late .mark,.is-late .check{border-color:var(--danger)}
+.pop .check{animation:pop .4s cubic-bezier(.2,.9,.3,1.4)}
+.task-body{flex:1;min-width:0;display:grid;gap:3px;text-align:left;border:0;background:transparent;padding:2px 0}
+.t-title{font-size:16px;font-weight:500;overflow-wrap:break-word;word-break:normal;hyphens:auto}
+.t-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:12.5px;color:var(--ink-3)}
+.t-meta .m{display:inline-flex;align-items:center;gap:4px}
+.t-meta svg.i{width:13px;height:13px}
+.tag{font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:var(--bg-2);color:var(--ink-2)}
+.tag-late{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.tag-ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.dots{display:inline-flex;gap:3px;align-items:center}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--line-2)}
+.dots i.on{background:var(--accent)}
+.empty{padding:26px 18px;text-align:center;border:1px dashed var(--line-2);border-radius:20px;color:var(--ink-3);font-size:14.5px}
+.empty b{display:block;font-family:var(--display);font-size:20px;font-weight:400;color:var(--ink-2);margin-bottom:4px}
+
+.two{display:grid;gap:18px}
+@media(min-width:900px){.two{grid-template-columns:1.25fr 1fr;align-items:start}}
+
+.who{display:flex;align-items:center;gap:12px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:17px;flex:none}
+[data-theme=dark] .av{color:#1B110B}
+.bar{height:6px;border-radius:9px;background:var(--bg-2);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--c,var(--accent));border-radius:9px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.mini-list{list-style:none;display:grid;gap:2px;margin-top:12px}
+.mini-list li{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--line);font-size:14.5px}
+.mini-list li:first-child{border-top:0}
+.mini-list .st{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line-2);flex:none}
+.mini-list li.d .st{background:var(--c);border-color:var(--c)}
+.mini-list li.d span.tx{color:var(--ink-3);text-decoration:line-through}
+.mini-list li.l .st{border-color:var(--danger)}
+.mini-list time{margin-left:auto;font-size:12px;color:var(--ink-3)}
+.next-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:13.5px}
+
+/* Semana */
+.wk-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding:14px 2px 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.wk-head h1{font-size:clamp(34px,7vw,58px);font-weight:300;font-style:italic;line-height:1;margin:8px 0 12px;letter-spacing:-.03em}
+.wk-nav{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:99px;border:1px solid transparent;font-weight:600;font-size:14.5px;transition:.2s;white-space:nowrap}
+.btn svg.i{width:18px;height:18px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:var(--accent-2)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-soft{background:var(--bg-2);color:var(--ink)}
+.btn-soft:hover{background:var(--surface-2)}
+.btn-ghost{background:transparent;border-color:var(--line-2);color:var(--ink-2)}
+.btn-ghost:hover{border-color:var(--ink-3);color:var(--ink)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:8px 14px;font-size:13.5px}
+.btn-lg{padding:15px 26px;font-size:16px}
+.link{background:none;border:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:14px;padding:6px}
+.desk-only{display:none}
+.week{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:720px){.week{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media(min-width:1200px){.week{grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:14px 12px 12px}
+.day.today{border-color:var(--accent);background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface) 70%)}
+.day.past{opacity:.86}
+.day-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;padding:0 4px}
+.day-h .dw{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.day.today .dw{color:var(--accent)}
+.day-h .num{font-family:var(--display);font-size:30px;font-weight:350;line-height:1}
+.day-h .cnt{margin-left:auto;font-size:12px;color:var(--ink-3)}
+.mini-add{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink-3);display:grid;place-items:center;transition:.2s}
+.mini-add:hover{color:var(--ink);border-color:var(--ink-3)}
+.mini-add svg{width:14px;height:14px}
+.day .tasks{gap:6px}
+.day .task{padding:9px 10px 9px 10px;border-radius:14px;gap:9px}
+.day .task::before{top:11px;bottom:11px}
+.day .check{width:26px;height:26px}
+.day .mark{width:22px;height:22px}
+.day .t-title{font-size:14.5px;line-height:1.25}
+.day .tag-late{display:none}
+@media(min-width:1200px){.day{padding:12px 8px 10px}.day .task{padding:8px 8px 8px 9px;gap:8px}.day .t-title{font-size:14px}.day-h .num{font-size:26px}}
+.day .t-meta{font-size:11.5px}
+.free{font-size:13px;color:var(--ink-3);padding:6px 4px;font-style:italic;font-family:var(--display)}
+
+/* Formularios y capas */
+.layer{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgba(24,13,7,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fade .2s}
+.sheet{width:100%;max-width:580px;max-height:94dvh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:slide .32s cubic-bezier(.2,.8,.2,1);box-shadow:0 -20px 60px -20px rgba(0,0,0,.5)}
+.sheet-sm{max-width:420px}
+.sheet-lg{max-width:680px}
+@media(min-width:720px){.layer{align-items:center;padding:20px}.sheet{border-radius:28px}}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.sheet-title{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:-.02em}
+.field{display:grid;gap:7px;margin:16px 0}
+.field>span,.field>label>span{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.field input,.field textarea,.field select,.inp{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line-2);background:var(--bg);font-size:16px;min-width:0}
+.field textarea{min-height:64px;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus,.inp:focus{outline:2px solid var(--accent);outline-offset:1px}
+.field .hint{font-size:13px;color:var(--ink-3);text-transform:none;letter-spacing:0;font-weight:400}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;background:var(--bg-2);border-radius:15px;padding:3px;gap:2px}
+.seg button{flex:1;padding:10px 8px;border-radius:12px;border:0;background:transparent;font-size:14px;font-weight:500;color:var(--ink-2);display:flex;align-items:center;justify-content:center;gap:7px;min-width:0}
+.seg button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(40,20,5,.18)}
+.seg .dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.chips{display:flex;gap:6px}
+.chips button{flex:1;max-width:46px;aspect-ratio:1;border-radius:50%;border:1px solid var(--line-2);background:transparent;font-weight:600;font-size:14px;color:var(--ink-2)}
+.chips button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pills{display:flex;gap:6px}
+.pills button{flex:1;padding:9px 0;border-radius:12px;border:1px solid var(--line-2);background:transparent;font-weight:600;color:var(--ink-2)}
+.pills button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.err{color:var(--danger);font-size:14px;min-height:0;margin:8px 0 0}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+.sheet-actions .grow{margin-right:auto}
+.reason{padding:14px 16px;border-radius:18px;background:var(--bg-2);margin:14px 0}
+.reason p{font-family:var(--display);font-size:20px;margin:4px 0}
+.meter{height:10px;border-radius:99px;background:var(--bg-2);overflow:hidden;margin:8px 0 6px}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .35s}
+.meter.ok i{background:var(--ok)}
+.meter.over i{background:var(--a)}
+.meter-t{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3)}
+.picks{display:grid;gap:8px;margin:14px 0}
+.pick{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;border:1px solid var(--line);background:var(--bg)}
+.pick.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--bg))}
+.pick .pt{flex:1;min-width:0;display:grid;gap:3px;font-size:15px;font-weight:500}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);font-size:18px;line-height:1;display:grid;place-items:center}
+.stepper b{min-width:18px;text-align:center;font-weight:600}
+.custom-add{display:flex;gap:8px;align-items:center}
+.custom-add input{flex:1}
+.custom-add select{width:auto}
+ol.steps{min-width:0;margin:14px 0 4px 20px;display:grid;gap:12px;font-size:14.5px;color:var(--ink-2)}
+ol.steps b{color:var(--ink)}
+ol.steps li{min-width:0;overflow-wrap:anywhere}
+pre.code{max-width:100%;margin:8px 0 0;padding:12px 14px;border-radius:14px;background:var(--bg-2);font-size:12.5px;overflow:auto;color:var(--ink)}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14.5px}
+.kv:first-child{border-top:0}
+.setgrid{display:grid;gap:18px}
+@media(min-width:900px){.setgrid{grid-template-columns:1fr 1fr;align-items:start}}
+.bank-row{display:grid;grid-template-columns:1fr 78px 34px;gap:8px;align-items:center;margin-top:8px}
+.bank-row .inp{padding:9px 11px;font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.switch{display:flex;align-items:flex-start;gap:12px}
+.switch input{width:20px;height:20px;accent-color:var(--accent);margin-top:2px;flex:none}
+table.prev{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+table.prev td,table.prev th{padding:7px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+table.prev th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);border-top:0}
+.hist{list-style:none;display:grid;gap:0}
+.hist li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 2px;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.hist b{font-weight:600}
+.hist small{display:block;color:var(--ink-3);font-size:12.5px}
+
+/* Onboarding */
+.ob-wrap{min-height:calc(100dvh - 90px);display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:20px 0}
+.ob-card{width:100%;max-width:520px;min-width:0}
+.ob-card h1{font-size:clamp(64px,18vw,104px);font-weight:300;font-style:italic;letter-spacing:-.04em;line-height:.95;margin:10px 0 14px}
+.ob-card .lead{font-size:17px;color:var(--ink-2);margin-bottom:22px;max-width:44ch}
+.choice{display:grid;gap:12px;margin:18px 0}
+.choice button{text-align:left;padding:18px;border-radius:22px;border:1px solid var(--line-2);background:var(--surface);display:grid;gap:4px;transition:.2s}
+.choice button:hover{border-color:var(--accent);transform:translateY(-1px)}
+.choice b{font-family:var(--display);font-size:21px;font-weight:400}
+.choice span{font-size:14px;color:var(--ink-3)}
+.choice .rec{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+
+#toasts{position:fixed;top:max(12px,env(safe-area-inset-top));left:0;right:0;z-index:90;display:grid;justify-items:center;gap:8px;pointer-events:none}
+.toast{background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-size:14.5px;max-width:min(92vw,440px);box-shadow:0 18px 40px -14px rgba(0,0,0,.55);animation:drop .35s cubic-bezier(.2,.8,.2,1)}
+.skel{height:120px;border-radius:24px;background:linear-gradient(90deg,var(--surface),var(--bg-2),var(--surface));background-size:200% 100%;animation:shimmer 1.4s infinite;margin-top:14px}
+
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes slide{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes drop{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+@media(min-width:900px){
+  .desk-only{display:inline-flex}
+  .fab{display:none}
+  #nav{position:static;max-width:640px;margin:8px auto 14px;grid-template-columns:repeat(5,auto);gap:4px;border-radius:99px;padding:5px}
+  #nav button{flex-direction:row;justify-content:center;gap:8px;padding:10px 16px;font-size:14px;border-radius:99px}
+  .badge{position:static;margin-left:2px}
+  main#view{padding-bottom:70px}
+  .stats{max-width:560px}
+}
+@media(max-width:480px){
+  .stats{gap:8px}.stat{padding:10px 11px}.stat b{font-size:22px}
+  .ring{width:88px;height:88px}.ring-c b{font-size:25px}
+  .bank-row{grid-template-columns:1fr 70px 34px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true"></span><span>Pacto</span></div>
+    <div class="top-r">
+      <span class="sync" id="sync" role="status"><i></i><b id="sync-t" style="font-weight:500"></b></span>
+      <button class="icon-btn" data-act="theme" id="theme-btn" aria-label="Cambiar tema"></button>
+      <button class="btn btn-primary btn-sm desk-only" data-act="new" id="top-new"></button>
+    </div>
+  </header>
+  <nav id="nav" aria-label="Secciones"></nav>
+  <main id="view"></main>
+  <button class="fab" data-act="new" id="fab" aria-label="Nueva tarea"></button>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<div id="layers"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   Utilidades
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => o === undefined ? undefined : JSON.parse(JSON.stringify(o));
+const nowMs = () => (typeof window.__NOW === 'function' ? window.__NOW() : Date.now());
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const validYMD = s => {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [y, m, d] = s.split('-').map(Number);
+  const date = new Date(y, m - 1, d, 12);
+  return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+};
+const validFirebaseUrl = raw => {
+  try { const u = new URL(String(raw || '').trim().replace(/\/+$/, ''));
+    return u.protocol === 'https:' && !u.username && !u.password && !u.search && !u.hash && u.pathname === '/' &&
+      (u.hostname.endsWith('.firebaseio.com') || u.hostname.endsWith('.firebasedatabase.app'));
+  } catch (e) { return false; }
+};
+const validRoom = r => typeof r === 'string' && /^[a-z0-9]{20,80}$/i.test(r);
+const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+const todayStr = () => ymd(new Date(nowMs()));
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ymd(d); };
+const wd = s => (parseD(s).getDay() + 6) % 7;            // lunes = 0
+const mondayOf = s => addDays(s, -wd(s));
+const diffDays = (a, b) => Math.round((parseD(b) - parseD(a)) / 864e5);
+const isoWeek = s => {
+  const d = parseD(s); const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+};
+const DOW = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const DOW3 = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const DOW1 = ['L','M','X','J','V','S','D'];
+const MON = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MON3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const fmtShort = s => { const d = parseD(s); return `${DOW3[wd(s)]} ${d.getDate()} ${MON3[d.getMonth()]}`; };
+const fmtLong = s => { const d = parseD(s); return `${d.getDate()} de ${MON[d.getMonth()]}`; };
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+const COST_LABEL = {1:'Ligera',2:'Sencilla',3:'Media',4:'Pesada',5:'Dura'};
+const newId = (p = 't') => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const b64enc = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64dec = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+const randomRoom = () => Array.from(crypto.getRandomValues(new Uint8Array(24)), b => (b % 36).toString(36)).join('');
+
+/* ============================================================
+   Iconos
+   ============================================================ */
+const svg = p => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const ICON = {
+  sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>'),
+  cal: svg('<rect x="3.5" y="5" width="17" height="15" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  users: svg('<circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c.6-3.5 3-5.2 6-5.2s5.4 1.7 6 5.2"/><path d="M16 5.4a3 3 0 010 6M18.6 15.4c1.3.8 2 2.1 2.4 4.6"/>'),
+  scale: svg('<path d="M12 4v16M7 20h10M4.5 7.5h15"/><path d="M4.5 7.5L2 14a3.2 3.2 0 006.5 0L4.5 7.5zM19.5 7.5L17 14a3.2 3.2 0 006.5 0l-4-6.5z"/>'),
+  sliders: svg('<path d="M4 7h9M18 7h2M4 17h2M11 17h9"/><circle cx="15.5" cy="7" r="2.4"/><circle cx="8.5" cy="17" r="2.4"/>'),
+  plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  left: svg('<path d="M14.5 5.5L8 12l6.5 6.5"/>'),
+  right: svg('<path d="M9.5 5.5L16 12l-6.5 6.5"/>'),
+  clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+  note: svg('<path d="M5 4.5h14v15H5z"/><path d="M8.5 9h7M8.5 13h5"/>'),
+  moon: svg('<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>'),
+  copy: svg('<rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5v-2a2 2 0 00-2-2h-7a2 2 0 00-2 2v7a2 2 0 002 2h2"/>'),
+  down: svg('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
+  up: svg('<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>'),
+  trash: svg('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7"/>'),
+  lock: svg('<rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/>')
+};
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 7.5"/></svg>';
+
+/* ============================================================
+   Estado, configuración y persistencia
+   ============================================================ */
+const LS = { cfg: 'pacto.cfg.v1', state: 'pacto.state.v1', pending: 'pacto.pending.v1', theme: 'pacto.theme' };
+const load = (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+const DEFAULT_BANK = [
+  ['Sacar la basura', 1], ['Poner y recoger la mesa', 1], ['Hacer la cama y ordenar la habitación', 1],
+  ['Fregar los platos de una comida', 2], ['Barrer y pasar la mopa', 2], ['Preparar el desayuno de mañana', 2],
+  ['Hacer la compra', 3], ['Cocinar la cena', 3], ['Poner una colada completa', 3],
+  ['Limpiar el baño', 4], ['Limpiar la cocina a fondo', 4], ['Aspirar y fregar toda la casa', 5]
+];
+const defaultBank = () => { const b = {}; DEFAULT_BANK.forEach(([title, cost], i) => { b['k' + (i + 1)] = { title, cost }; }); return b; };
+
+function normalize(s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) s = {};
+  if (!s.meta || typeof s.meta !== 'object') s.meta = {};
+  s.meta.names = Object.assign({ a: 'Yo', b: 'Mi pareja' }, s.meta.names || {});
+  if (!s.meta.settings || typeof s.meta.settings !== 'object') s.meta.settings = {};
+  for (const k of ['tasks', 'done', 'punish', 'bank']) if (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {};
+  if (!validYMD(s.lastReview)) s.lastReview = '';
+  return s;
+}
+function sanitizeBackupState(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('La copia no contiene un estado válido.');
+  const s = normalize(clone(raw));
+  const today = todayStr();
+  const names = {};
+  for (const slot of ['a', 'b']) names[slot] = String(s.meta.names[slot] || (slot === 'a' ? 'Yo' : 'Mi pareja')).trim().slice(0, 24) || (slot === 'a' ? 'Yo' : 'Mi pareja');
+  s.meta.names = names;
+  for (const [id, t] of Object.entries(s.tasks)) {
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(id) || !t || typeof t !== 'object' || Array.isArray(t) || String(t.id || '') !== id || !['a','b'].includes(t.owner) || !['daily','days','once','flex'].includes(t.type) || typeof t.title !== 'string' || !t.title.trim()) { delete s.tasks[id]; continue; }
+    t.title = t.title.trim().slice(0, 80); t.cost = Math.min(5, Math.max(1, Number(t.cost) || 1));
+    t.created = Number(t.created) || 0; t.notes = typeof t.notes === 'string' ? t.notes.slice(0, 200) : '';
+    t.time = /^([01]\d|2[0-3]):[0-5]\d$/.test(t.time || '') ? t.time : '';
+    if (t.type === 'once') { if (!validYMD(t.date)) { delete s.tasks[id]; continue; } t.start = t.date; }
+    else { if (!validYMD(t.start)) t.start = today; if (t.end && !validYMD(t.end)) delete t.end; }
+    if (t.type === 'days') { const days = String(t.days || '').split(',').map(Number).filter(d => Number.isInteger(d) && d >= 0 && d <= 6); if (!days.length) { delete s.tasks[id]; continue; } t.days = [...new Set(days)].sort((a,b)=>a-b).join(','); t.every = Math.min(4, Math.max(1, Number(t.every) || 1)); }
+    if (t.by && !['a','b'].includes(t.by)) delete t.by;
+    if (t.origin !== 'punishment') delete t.origin;
+    if (t.origin === 'punishment' && (typeof t.pid !== 'string' || !t.pid)) delete t.pid;
+  }
+  for (const [id, d] of Object.entries(s.done)) if (!id || !d || typeof d !== 'object' || !['a','b'].includes(d.by)) delete s.done[id];
+  for (const [id, p] of Object.entries(s.punish)) {
+    if (!p || typeof p !== 'object' || String(p.id || '') !== id || !['a','b'].includes(p.debtor) || !['a','b'].includes(p.creditor) || !validYMD(p.date) || typeof p.title !== 'string' || !p.title.trim() || !['pending','assigned','void','forgiven'].includes(p.status)) { delete s.punish[id]; continue; }
+    p.title = p.title.trim().slice(0, 80); p.cost = Math.min(5, Math.max(1, Number(p.cost) || 1)); p.at = Number(p.at) || 0;
+  }
+  for (const [id, b] of Object.entries(s.bank)) {
+    if (!b || typeof b !== 'object' || typeof b.title !== 'string' || !b.title.trim()) { delete s.bank[id]; continue; }
+    b.title = b.title.trim().slice(0, 60); b.cost = Math.min(5, Math.max(1, Number(b.cost) || 1));
+  }
+  s.lastReview = validYMD(s.lastReview) ? s.lastReview : addDays(today, -1);
+  return normalize(s);
+}
+function freshState(nameA, nameB) {
+  const s = normalize({});
+  s.meta.names = { a: nameA || 'Yo', b: nameB || 'Mi pareja' };
+  s.bank = defaultBank();
+  s.lastReview = addDays(todayStr(), -1);
+  return s;
+}
+let cfg = load(LS.cfg, null);                 // {mode:'local'|'sync', dbUrl, room, me:'a'|'b'}
+let S = normalize(load(LS.state, null));
+let pending = load(LS.pending, []);
+if (!Array.isArray(pending)) pending = [];
+const ui = { tab: 'today', off: { mine: 0, theirs: 0 }, animate: true, pop: null, day: todayStr() };
+const ME = () => (cfg && cfg.me) || 'a';
+const oth = s => (s === 'a' ? 'b' : 'a');
+const nm = s => S.meta.names[s] || (s === 'a' ? 'Yo' : 'Mi pareja');
+const persist = () => save(LS.state, S);
+const savePending = () => save(LS.pending, pending);
+
+function setPath(obj, parts, val) {
+  if (!parts.length) return;
+  let o = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const k = parts[i];
+    if (o[k] == null || typeof o[k] !== 'object') o[k] = {};
+    o = o[k];
+  }
+  const last = parts[parts.length - 1];
+  if (val === null || val === undefined) delete o[last]; else o[last] = val;
+}
+function applyLocal(u) {
+  for (const [p, v] of Object.entries(u)) {
+    if (p === '/') { S = normalize(clone(v)); continue; }
+    setPath(S, p.split('/').filter(Boolean), v === undefined ? null : clone(v));
+  }
+  normalize(S);
+}
+
+/* Todo cambio pasa por commit(): se aplica en local y se envía a la nube. */
+function commit(updates) {
+  applyLocal(updates);
+  persist();
+  if (cfg && cfg.mode === 'sync') { pending.push(clone(updates)); savePending(); Sync.flush(); }
+  scheduleRender();
+}
+
+/* ============================================================
+   Lógica de tareas
+   ============================================================ */
+const taskDays = t => String(t.days == null ? '' : t.days).split(',').filter(x => x !== '').map(Number);
+function occursOn(t, d) {
+  if (t.type === 'flex') return false;
+  if (!t.start || d < t.start) return false;
+  if (t.end && d > t.end) return false;
+  if (t.type === 'once') return t.date === d;
+  if (t.type === 'daily') return true;
+  if (t.type === 'days') {
+    if (!taskDays(t).includes(wd(d))) return false;
+    const ev = Number(t.every) || 1;
+    if (ev > 1) { const w = diffDays(mondayOf(t.start), mondayOf(d)) / 7; if (((w % ev) + ev) % ev !== 0) return false; }
+    return true;
+  }
+  return false;
+}
+function flexApplies(t, mon) {
+  if (t.type !== 'flex' || !t.start) return false;
+  if (mon < mondayOf(t.start)) return false;
+  if (t.end && addDays(mon, 6) > t.end) return false;
+  return true;
+}
+const byTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99') || (a.created || 0) - (b.created || 0) || String(a.title).localeCompare(String(b.title));
+const allTasks = () => Object.values(S.tasks).filter(t => t && t.id);
+// La propiedad owner es la persona del plan base. En tareas recurrentes, la rotación
+// intercambia automáticamente a quién le corresponde cada semana, usando lunes como ancla.
+function effectiveOwner(t, date) {
+  const base = t.owner === 'b' ? 'b' : 'a';
+  if (!S.meta.settings.rotation || t.origin === 'punishment' || t.type === 'once') return base;
+  const anchor = validYMD(S.meta.settings.rotationAnchor) ? mondayOf(S.meta.settings.rotationAnchor) : mondayOf(todayStr());
+  const week = mondayOf(date);
+  const parity = Math.floor(diffDays(anchor, week) / 7);
+  return Math.abs(parity % 2) === 1 ? oth(base) : base;
+}
+const tasksFor = (slot, d) => allTasks().filter(t => effectiveOwner(t, d) === slot && occursOn(t, d)).sort(byTime);
+const flexFor = (slot, mon) => allTasks().filter(t => effectiveOwner(t, mon) === slot && flexApplies(t, mon)).sort(byTime);
+const dkey = d => d.replace(/-/g, '');
+const doneKey = (t, d) => `${t.id}_${dkey(d)}`;
+const isDone = (t, d) => !!S.done[doneKey(t, d)];
+const punishId = (t, d) => `p_${t.id}_${dkey(d)}`;
+const costOf = t => Math.min(5, Math.max(1, Number(t.cost) || 1));
+
+function dayStats(slot, d) {
+  const ts = tasksFor(slot, d);
+  let done = 0, pts = 0, dpts = 0;
+  ts.forEach(t => { const c = costOf(t); pts += c; if (isDone(t, d)) { done++; dpts += c; } });
+  return { total: ts.length, done, pts, dpts };
+}
+function weekStats(slot, mon) {
+  let total = 0, done = 0;
+  for (let i = 0; i < 7; i++) { const s = dayStats(slot, addDays(mon, i)); total += s.total; done += s.done; }
+  flexFor(slot, mon).forEach(t => { total++; if (isDone(t, mon)) done++; });
+  return { total, done };
+}
+function weekEffort(slot, mon) {
+  let points = 0;
+  for (let i = 0; i < 7; i++) points += dayStats(slot, addDays(mon, i)).pts;
+  flexFor(slot, mon).forEach(t => { points += costOf(t); });
+  return points;
+}
+function streak(slot) {
+  const today = todayStr(); let n = 0;
+  for (let i = 0; i < 400; i++) {
+    const s = dayStats(slot, addDays(today, -i));
+    if (!s.total) continue;
+    if (s.done === s.total) n++; else if (i === 0) continue; else break;
+  }
+  return n;
+}
+const missedOn = (slot, d) => tasksFor(slot, d).filter(t => !isDone(t, d));
+
+function recurLabel(t) {
+  switch (t.type) {
+    case 'daily': return 'Cada día';
+    case 'once': return 'Puntual';
+    case 'flex': return 'Cualquier día de la semana';
+    case 'days': {
+      const ds = taskDays(t); let s;
+      if (ds.length === 7) s = 'Cada día';
+      else if (ds.join() === '0,1,2,3,4') s = 'Lun–Vie';
+      else if (ds.join() === '5,6') s = 'Fin de semana';
+      else s = ds.map(i => DOW3[i]).join(' · ');
+      if ((Number(t.every) || 1) > 1) s += ` · cada ${t.every} sem.`;
+      return s;
+    }
+  }
+  return '';
+}
+const canEdit = t => t.origin === 'punishment' ? t.by === ME() : (t.owner === ME() || t.by === ME() || S.meta.settings.rotation === true);
+
+function toggleDone(t, d) {
+  if (effectiveOwner(t, d) !== ME()) return;
+  const key = doneKey(t, d), u = {};
+  const was = !!S.done[key];
+  if (was) u[`done/${key}`] = null; else u[`done/${key}`] = { by: ME(), at: nowMs() };
+  const pid = punishId(t, d), p = S.punish[pid];
+  if (!was && p && p.status === 'pending') { u[`punish/${pid}/status`] = 'void'; u[`punish/${pid}/resolvedAt`] = nowMs(); }
+  if (was && p && p.status === 'void') { u[`punish/${pid}/status`] = 'pending'; u[`punish/${pid}/resolvedAt`] = null; }
+  ui.pop = key;
+  commit(u);
+}
+
+function deleteTask(t) {
+  const today = todayStr(), u = {};
+  if (t.type === 'once' || (t.start && t.start >= today)) {
+    u[`tasks/${t.id}`] = null;
+    if (t.origin === 'punishment' && t.pid && S.punish[t.pid]) {
+      const rest = allTasks().filter(x => x.pid === t.pid && x.id !== t.id);
+      if (!rest.length) {
+        const p = S.punish[t.pid];
+        u[`punish/${t.pid}/status`] = p.manual ? 'forgiven' : 'pending';
+        u[`punish/${t.pid}/resolvedAt`] = null;
+      }
+    }
+  } else {
+    u[`tasks/${t.id}/end`] = addDays(today, -1);
+  }
+  commit(u);
+  toast('Tarea eliminada');
+}
+
+/* ---------- Revisión de medianoche ---------- */
+function runReview() {
+  if (!cfg || !Sync.ready) return;
+  const today = todayStr(), yesterday = addDays(today, -1);
+  const last = S.lastReview;
+  if (!last) { commit({ lastReview: yesterday }); return; }
+  if (last >= yesterday) return;
+  const from = addDays(last, 1);
+  // Revisa en bloques para no congelar móviles con una cola larga; el cursor avanza solo por días procesados.
+  const span = diffDays(from, yesterday);
+  const through = span >= 90 ? addDays(from, 89) : yesterday;
+  const u = {}, created = [];
+  const chain = S.meta.settings.chain !== false;
+  for (let d = from; d <= through; d = addDays(d, 1)) {
+    for (const t of allTasks()) {
+      let kd = null;
+      if (t.type === 'flex') {
+        if (wd(d) === 6) { const mon = mondayOf(d); if (flexApplies(t, mon)) kd = mon; }
+      } else if (occursOn(t, d)) kd = d;
+      if (!kd) continue;
+      if (S.done[doneKey(t, kd)]) continue;
+      if (t.origin === 'punishment' && !chain) continue;
+      const pid = punishId(t, kd);
+      if (S.punish[pid]) continue;
+      const debtor = effectiveOwner(t, kd);
+      const p = { id: pid, debtor, creditor: oth(debtor), taskId: t.id, title: t.title, date: d, cost: costOf(t), status: 'pending', at: nowMs() };
+      if (t.type === 'flex') p.flex = 1;
+      u[`punish/${pid}`] = p; created.push(p);
+    }
+  }
+  u.lastReview = through;
+  commit(u);
+  if (created.length) announceNew(created);
+}
+function announceNew(list) {
+  const me = ME();
+  const toImpose = list.filter(p => p.creditor === me);
+  const mine = list.filter(p => p.debtor === me);
+  if (toImpose.length) notify(`${nm(oth(me))} no completó ${toImpose.length === 1 ? '«' + toImpose[0].title + '»' : toImpose.length + ' tareas'}`, 'Te toca elegir el castigo.', true);
+  if (mine.length) notify(mine.length === 1 ? `Se te pasó «${mine[0].title}»` : `Se te pasaron ${mine.length} tareas`, `${nm(oth(me))} elegirá tu castigo.`, true);
+}
+
+/* ============================================================
+   Sincronización (Firebase Realtime Database vía REST + SSE)
+   ============================================================ */
+const JSONH = { 'Content-Type': 'application/json' };
+function fetchT(url, opt = {}, ms = 12000) {
+  const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const tm = ac ? setTimeout(() => ac.abort(), ms) : null;
+  return fetch(url, Object.assign({}, opt, ac ? { signal: ac.signal } : {})).finally(() => tm && clearTimeout(tm));
+}
+const Sync = {
+  es: null, status: 'off', ready: false, timedOut: false, lastEvt: 0, flushing: false,
+  watch: null, retry: null, pollT: null, firstT: null,
+  base() { return `${cfg.dbUrl}/rooms/${cfg.room}`; },
+  setStatus(s) { if (this.status !== s) { this.status = s; renderChrome(); } },
+  start() {
+    this.stop();
+    if (!cfg || cfg.mode !== 'sync') { this.ready = true; return; }
+    this.ready = false; this.timedOut = false;
+    this.setStatus('connecting');
+    this.firstT = setTimeout(() => { if (!this.ready) { this.timedOut = true; scheduleRender(); } }, 7000);
+    this.connect();
+    this.watch = setInterval(() => {
+      if (this.status === 'online' && this.es && Date.now() - this.lastEvt > 75000) this.connect();
+      if (pending.length) this.flush();
+    }, 8000);
+  },
+  stop() {
+    if (this.es) { this.es.close(); this.es = null; }
+    clearInterval(this.watch); clearTimeout(this.retry); clearTimeout(this.pollT); clearTimeout(this.firstT);
+    this.status = 'off';
+  },
+  connect() {
+    if (this.es) { this.es.close(); this.es = null; }
+    clearTimeout(this.pollT);
+    if (typeof EventSource === 'undefined') { this.poll(); return; }
+    let es;
+    try { es = new EventSource(this.base() + '.json'); } catch (e) { this.setStatus('offline'); this.retry = setTimeout(() => this.connect(), 6000); return; }
+    this.es = es;
+    es.onopen = () => { this.lastEvt = Date.now(); };
+    const handler = kind => e => { this.lastEvt = Date.now(); this.onEvent(kind, e); };
+    es.addEventListener('put', handler('put'));
+    es.addEventListener('patch', handler('patch'));
+    es.addEventListener('keep-alive', () => { this.lastEvt = Date.now(); });
+    const fail = () => { this.setStatus('offline'); toast('Sin permiso para leer la base de datos. Revisa las reglas de Firebase.'); };
+    es.addEventListener('cancel', fail);
+    es.addEventListener('auth_revoked', fail);
+    es.onerror = () => {
+      this.setStatus('offline');
+      if (es.readyState === 2) { clearTimeout(this.retry); this.retry = setTimeout(() => this.connect(), 5000); }
+    };
+  },
+  async poll() {
+    try {
+      const r = await fetchT(this.base() + '.json');
+      if (r.ok) { this.setStatus('online'); this.onEvent('put', { data: JSON.stringify({ path: '/', data: await r.json() }) }); }
+      else this.setStatus('offline');
+    } catch (e) { this.setStatus('offline'); }
+    this.pollT = setTimeout(() => this.poll(), 5000);
+  },
+  async pull() {
+    if (!cfg || cfg.mode !== 'sync') return;
+    if (!this.es && typeof EventSource !== 'undefined') this.connect();
+    try {
+      const r = await fetchT(this.base() + '.json');
+      if (r.ok) { this.lastEvt = Date.now(); this.onEvent('put', { data: JSON.stringify({ path: '/', data: await r.json() }) }); }
+    } catch (e) {}
+  },
+  onEvent(kind, e) {
+    let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+    if (!m || typeof m.path !== 'string') return;
+    this.setStatus('online');
+    const first = !this.ready && kind === 'put' && m.path === '/';
+    applyRemote(kind, m.path, m.data);
+    if (first) {
+      this.ready = true; clearTimeout(this.firstT);
+      runReview(); scheduleRender();
+    }
+    this.flush();
+  },
+  async flush() {
+    if (this.flushing || !pending.length || !cfg || cfg.mode !== 'sync') return;
+    this.flushing = true;
+    try {
+      while (pending.length) {
+        const u = pending[0];
+        const root = Object.prototype.hasOwnProperty.call(u, '/');
+        const res = await fetchT(this.base() + '.json', { method: root ? 'PUT' : 'PATCH', headers: JSONH, body: JSON.stringify(root ? u['/'] : u) });
+        if (!res.ok) {
+          if (res.status >= 400 && res.status < 500) { pending.shift(); savePending(); toast('Un cambio fue rechazado por la base de datos. Revisa las reglas de Firebase.'); continue; }
+          throw new Error('http ' + res.status);
+        }
+        pending.shift(); savePending();
+      }
+      if (this.status === 'offline' && this.es && this.es.readyState === 1) this.setStatus('online');
+    } catch (e) {
+      this.setStatus('offline');
+    } finally { this.flushing = false; renderChrome(); }
+  }
+};
+
+function applyRemote(kind, path, data) {
+  const prevP = clone(S.punish) || {}, prevT = clone(S.tasks) || {};
+  const parts = path.split('/').filter(Boolean);
+  if (kind === 'put') {
+    if (!parts.length) S = normalize(clone(data) || {});
+    else setPath(S, parts, clone(data));
+  } else if (kind === 'patch' && data && typeof data === 'object') {
+    for (const [k, v] of Object.entries(data)) setPath(S, parts.concat(k.split('/').filter(Boolean)), clone(v));
+  }
+  normalize(S);
+  for (const u of pending) applyLocal(u);     // reaplica lo que aún no se ha enviado
+  persist();
+  if (Sync.ready) diffNotify(prevP, prevT);
+  scheduleRender();
+}
+function diffNotify(prevP, prevT) {
+  const me = ME();
+  for (const [id, p] of Object.entries(S.punish)) {
+    const was = prevP[id];
+    if (!was && p.status === 'pending') announceNew([p]);
+    if (p.status === 'assigned' && (!was || was.status !== 'assigned') && p.debtor === me) {
+      const n = allTasks().filter(t => t.pid === id).length;
+      notify(`${nm(p.creditor)} te ha impuesto un castigo`, `${n} ${n === 1 ? 'tarea nueva' : 'tareas nuevas'} por «${p.title}».`, true);
+    }
+  }
+  for (const t of allTasks()) {
+    if (!prevT[t.id] && t.owner === me && t.by && t.by !== me && t.origin !== 'punishment') notify(`${nm(t.by)} te ha añadido una tarea`, t.title, false);
+  }
+}
+
+/* ============================================================
+   Avisos
+   ============================================================ */
+function toast(msg) {
+  const box = $('#toasts'); if (!box) return;
+  if (box.lastChild && box.lastChild.textContent === msg) box.lastChild.remove();
+  while (box.children.length >= 3) box.firstChild.remove();
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 4600);
+}
+function notify(title, body, system) {
+  toast(body ? `${title}. ${body}` : title);
+  try {
+    if (system && typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification(title, { body, tag: 'pacto' });
+  } catch (e) {}
+}
+
+/* ============================================================
+   Capas (modales)
+   ============================================================ */
+const layers = [];
+function openLayer(inner, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'layer';
+  el.innerHTML = `<div class="sheet ${cls}" role="dialog" aria-modal="true">${inner}</div>`;
+  $('#layers').appendChild(el);
+  const previousFocus = document.activeElement;
+  const layer = {
+    el, sheet: el.firstElementChild, onClose: null, previousFocus,
+    close() {
+      const i = layers.indexOf(layer); if (i < 0) return;
+      layers.splice(i, 1); el.remove();
+      if (!layers.length) { document.body.classList.remove('lock'); if (layer.previousFocus && typeof layer.previousFocus.focus === 'function') layer.previousFocus.focus({ preventScroll: true }); }
+      if (layer.onClose) layer.onClose();
+      if (!layers.length && deferred) scheduleRender();
+    }
+  };
+  el.addEventListener('mousedown', e => { if (e.target === el) layer.close(); });
+  layers.push(layer); document.body.classList.add('lock');
+  const f = el.querySelector('[autofocus]'); if (f) setTimeout(() => f.focus(), 40);
+  return layer;
+}
+function confirmBox({ title, text, ok = 'Aceptar', danger = false }) {
+  return new Promise(res => {
+    const l = openLayer(`<h2 class="sheet-title">${esc(title)}</h2><p class="muted" style="margin-top:8px;font-size:15px">${esc(text || '')}</p>
+      <div class="sheet-actions"><button class="btn btn-ghost" data-r="0">Cancelar</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-r="1">${esc(ok)}</button></div>`, 'sheet-sm');
+    l.sheet.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return; const v = b.dataset.r === '1'; l.onClose = null; l.close(); res(v); });
+    l.onClose = () => res(false);
+  });
+}
+const copyText = async txt => {
+  try { await navigator.clipboard.writeText(txt); return true; } catch (e) {}
+  try { const t = document.createElement('textarea'); t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return ok; } catch (e) { return false; }
+};
+function downloadFile(name, text, type = 'application/json') {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+
+/* ============================================================
+   Componentes de vista
+   ============================================================ */
+const dots = n => { const cost = Math.min(5, Math.max(1, Number(n) || 1)); return `<span class="dots" role="img" aria-label="Esfuerzo ${cost} de 5" title="${COST_LABEL[cost]}">${[1,2,3,4,5].map(i => `<i${i <= cost ? ' class="on"' : ''}></i>`).join('')}</span>`; };
+const avatar = slot => `<span class="av" style="--c:var(--${slot})" aria-hidden="true">${esc((nm(slot) || '?').trim().charAt(0).toUpperCase())}</span>`;
+
+function metaHTML(t, o) {
+  const bits = [];
+  if (t.time && t.type !== 'flex') bits.push(`<span class="m">${ICON.clock}${esc(t.time)}</span>`);
+  if (o.recur) bits.push(`<span class="m">${esc(recurLabel(t))}</span>`);
+  if (t.origin === 'punishment') bits.push(`<span class="tag">Castigo${t.by ? ' de ' + esc(nm(t.by)) : ''}</span>`);
+  if (o.late) bits.push('<span class="tag tag-late">Sin hacer</span>');
+  bits.push(dots(costOf(t)));
+  if (t.notes) bits.push(`<span class="m" title="${esc(t.notes)}">${ICON.note}</span>`);
+  return bits.join('');
+}
+function row(t, d, o = {}) {
+  const today = todayStr(), flex = t.type === 'flex';
+  const done = isDone(t, d);
+  const mine = effectiveOwner(t, d) === ME();
+  const canCheck = mine && (flex ? mondayOf(today) >= d : d <= today);
+  const late = !done && (flex ? addDays(d, 6) < today : d < today);
+  const pop = ui.pop && ui.pop === doneKey(t, d);
+  const lbl = `${esc(t.title)}`;
+  const mark = canCheck
+    ? `<button class="check" data-act="toggle" data-id="${esc(t.id)}" data-date="${d}" aria-pressed="${done}" aria-label="${done ? 'Desmarcar' : 'Marcar como hecha'}: ${lbl}">${CHECK}</button>`
+    : `<span class="mark" role="img" aria-label="${done ? 'Hecha' : 'Pendiente'}">${CHECK}</span>`;
+  return `<li class="task${done ? ' is-done' : ''}${late ? ' is-late' : ''}${pop ? ' pop' : ''}" style="--c:var(--${effectiveOwner(t, d) === 'b' ? 'b' : 'a'})">
+    ${mark}
+    <button class="task-body" data-act="${canEdit(t) ? 'edit' : 'view'}" data-id="${esc(t.id)}">
+      <span class="t-title">${lbl}</span><span class="t-meta">${metaHTML(t, Object.assign({}, o, { late }))}</span>
+    </button></li>`;
+}
+const tasksUL = (list, d, o) => `<ul class="tasks">${list.map(t => row(t, d, o)).join('')}</ul>`;
+
+/* ---------- HOY ---------- */
+function alertsHTML() {
+  const me = ME(), out = [];
+  const list = Object.values(S.punish);
+  list.filter(p => p.creditor === me && p.status === 'pending').sort((a, b) => (a.at || 0) - (b.at || 0)).forEach(p => {
+    out.push(`<div class="alert"><div><b>${esc(nm(p.debtor))} no hizo «${esc(p.title)}»</b><span>${p.flex ? 'Semana del ' + fmtShort(mondayOf(p.date)) : fmtShort(p.date)} · esfuerzo ${costOf(p)}. Te toca elegir el castigo.</span></div>
+      <button class="btn btn-primary btn-sm" data-act="impose" data-pid="${esc(p.id)}">Elegir castigo</button></div>`);
+  });
+  const mineP = list.filter(p => p.debtor === me && p.status === 'pending');
+  if (mineP.length > 2) {
+    out.push(`<div class="alert soft"><div><b>Se te pasaron ${mineP.length} tareas</b><span>${esc(mineP.slice(0, 3).map(p => p.title).join(', '))}${mineP.length > 3 ? '…' : ''} · ${esc(nm(oth(me)))} elegirá tu castigo. Si las hiciste, márcalas en Mi semana.</span></div></div>`);
+  } else mineP.forEach(p => {
+    out.push(`<div class="alert soft"><div><b>Se te pasó «${esc(p.title)}»</b><span>${fmtShort(p.date)} · ${esc(nm(p.creditor))} elegirá tu castigo. Si lo hiciste, márcala en Mi semana.</span></div></div>`);
+  });
+  return out.length ? `<div class="alerts" style="--i:1">${out.join('')}</div>` : '';
+}
+function viewToday() {
+  const t = todayStr(), me = ME(), ot = oth(me), mon = mondayOf(t);
+  const my = tasksFor(me, t), flex = flexFor(me, mon), ds = dayStats(me, t), wk = weekStats(me, mon);
+  const nextD = addDays(t, 1), next = tasksFor(me, nextD);
+  const h = new Date(nowMs()).getHours();
+  const greet = h < 6 ? 'Buenas noches' : h < 13 ? 'Buenos días' : h < 21 ? 'Buenas tardes' : 'Buenas noches';
+  const pct = ds.total ? ds.done / ds.total : 0, C = 2 * Math.PI * 34;
+  const status = !ds.total ? 'día libre' : ds.done === ds.total ? 'todo hecho' : `${ds.total - ds.done} por hacer`;
+  const ots = tasksFor(ot, t), ods = dayStats(ot, t);
+  const oy = missedOn(ot, addDays(t, -1));
+  const empty = !allTasks().length;
+  const wkPct = wk.total ? Math.round(wk.done / wk.total * 100) : 0;
+  const myFlexPending = flex.filter(x => !isDone(x, mon));
+  const effortA = weekEffort('a', mon), effortB = weekEffort('b', mon), effortTotal = effortA + effortB;
+  const effortAWidth = effortTotal ? Math.round(effortA / effortTotal * 100) : 0;
+  const effortGap = Math.abs(effortA - effortB);
+  const balanceText = !effortTotal ? 'Aún no hay tareas asignadas esta semana.' : effortGap <= 2 ? 'La carga está bastante equilibrada.' : `${esc(nm(effortA > effortB ? 'a' : 'b'))} tiene ${effortGap} puntos más de esfuerzo planificado.`;
+
+  let html = `<section class="hero" style="--i:0"><div>
+      <p class="eyebrow">${greet}, ${esc(nm(me))} · Semana ${isoWeek(t)}</p>
+      <h1 class="hero-day">${DOW[wd(t)]}</h1>
+      <p class="hero-date">${fmtLong(t)} de ${parseD(t).getFullYear()}</p></div>
+    <div class="ring" role="img" aria-label="${ds.done} de ${ds.total} tareas de hoy completadas">
+      <svg viewBox="0 0 80 80"><circle class="tr" cx="40" cy="40" r="34"/><circle class="pg" cx="40" cy="40" r="34" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C * (1 - pct)).toFixed(2)}"/></svg>
+      <div class="ring-c"><b>${ds.total ? ds.done + '/' + ds.total : '—'}</b><span>${status}</span></div></div></section>`;
+  html += alertsHTML();
+  html += `<div class="stats" style="--i:2"><div class="stat"><b>${streak(me)}</b><span>${streak(me) === 1 ? 'día' : 'días'} de racha</span></div><div class="stat"><b>${wkPct}%</b><span>de la semana</span></div><div class="stat"><b>${ds.dpts}/${ds.pts}</b><span>puntos hoy</span></div></div>`;
+  html += `<section class="balance" style="--i:2.5" aria-label="Equilibrio de tareas de esta semana"><div class="balance-head"><div><p class="eyebrow">REPARTO DE LA SEMANA</p><h3>El esfuerzo, entre los dos</h3></div><span class="tag">${effortTotal ? `${effortTotal} puntos` : 'Por planificar'}</span></div><div class="balance-people"><div class="balance-person"><div class="balance-id"><i class="balance-dot" style="--c:var(--a)"></i><span>${esc(nm('a'))}</span></div><strong>${effortA} <small>pts</small></strong></div><div class="balance-person"><div class="balance-id"><i class="balance-dot" style="--c:var(--b)"></i><span>${esc(nm('b'))}</span></div><strong>${effortB} <small>pts</small></strong></div></div><div class="balance-track" role="img" aria-label="${esc(nm('a'))}: ${effortA} puntos; ${esc(nm('b'))}: ${effortB} puntos"><span class="balance-a" style="width:${effortAWidth}%"></span><span class="balance-b" style="width:${effortTotal ? 100 - effortAWidth : 0}%"></span></div><p class="balance-note">${balanceText} <span>Cuenta el esfuerzo planificado, no solo el número de tareas.</span></p></section>`;
+
+  if (empty) {
+    html += `<div class="empty" style="margin-top:22px;--i:3"><b>Vuestro Pacto está vacío</b>Añade la primera tarea con el botón «+», o importa de golpe la planificación que tenéis en papel.<div class="row" style="justify-content:center;margin-top:14px"><button class="btn btn-primary" data-act="new">Nueva tarea</button><button class="btn btn-ghost" data-act="import-plan">Importar planificación</button></div></div>`;
+  }
+  html += `<div class="two" style="--i:3"><div>
+      <div class="sec-h"><h2>Para hoy</h2><span class="muted">${my.length ? my.length + (my.length === 1 ? ' tarea' : ' tareas') : ''}</span></div>
+      ${my.length ? tasksUL(my, t, {}) : `<div class="empty"><b>Nada previsto para hoy</b>Aprovecha el respiro.</div>`}
+      ${flex.length ? `<div class="sec-h"><h2>Esta semana, cuando quieras</h2><span class="muted">${myFlexPending.length} pendiente${myFlexPending.length === 1 ? '' : 's'}</span></div>${tasksUL(flex, mon, { recur: false })}` : ''}
+      <div class="sec-h"><h2>Mañana</h2><span class="muted">${DOW[wd(nextD)]} ${parseD(nextD).getDate()}</span></div>
+      ${next.length ? `<div class="next-chips">${next.map(x => `<span class="chip">${x.time ? esc(x.time) + ' · ' : ''}${esc(x.title)}</span>`).join('')}</div>` : '<p class="muted">Sin tareas para mañana.</p>'}
+    </div>
+    <div><div class="sec-h"><h2>${esc(nm(ot))}</h2><span class="muted">hoy</span></div>
+      <div class="card"><div class="who">${avatar(ot)}<div style="flex:1;min-width:0"><b style="font-weight:600">${ods.total ? `${ods.done} de ${ods.total} hechas` : 'Sin tareas hoy'}</b><div class="muted" style="font-size:13px">${esc(nm(ot))}</div></div></div>
+      <div class="bar" style="--c:var(--${ot})"><i style="width:${ods.total ? Math.round(ods.done / ods.total * 100) : 0}%"></i></div>
+      ${ots.length ? `<ul class="mini-list" style="--c:var(--${ot})">${ots.map(x => `<li class="${isDone(x, t) ? 'd' : ''}"><span class="st"></span><span class="tx">${esc(x.title)}</span>${x.time ? `<time>${esc(x.time)}</time>` : ''}</li>`).join('')}</ul>` : ''}
+      ${oy.length ? `<p style="margin-top:14px;font-size:13.5px;color:var(--danger)"><b>Ayer se le pasó:</b> ${oy.map(x => esc(x.title)).join(', ')}</p>` : ''}
+      <div class="row" style="margin-top:16px"><button class="btn btn-soft btn-sm" data-act="tab" data-tab="theirs">Ver su semana</button><button class="btn btn-ghost btn-sm" data-act="impose">Imponer castigo</button></div></div></div></div>`;
+  return html;
+}
+
+/* ---------- SEMANA ---------- */
+function viewWeek(which) {
+  const slot = which === 'mine' ? ME() : oth(ME());
+  const mon = addDays(mondayOf(todayStr()), ui.off[which] * 7);
+  const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(mon, i));
+  const today = todayStr();
+  const ws = weekStats(slot, mon), flex = flexFor(slot, mon);
+  const a = parseD(days[0]), b = parseD(days[6]);
+  const range = a.getMonth() === b.getMonth() ? `${a.getDate()} – ${b.getDate()} ${MON[b.getMonth()]}` : `${a.getDate()} ${MON3[a.getMonth()]} – ${b.getDate()} ${MON3[b.getMonth()]}`;
+  let missed = 0;
+  days.forEach(d => { if (d < today) missed += missedOn(slot, d).length; });
+  flex.forEach(t => { if (addDays(mon, 6) < today && !isDone(t, mon)) missed++; });
+  const pctw = ws.total ? Math.round(ws.done / ws.total * 100) : 0;
+  const rel = ui.off[which] === 0 ? 'Esta semana' : ui.off[which] === 1 ? 'Próxima semana' : ui.off[which] === -1 ? 'Semana pasada' : `Semana ${isoWeek(mon)}`;
+  let html = `<section class="wk-head" style="--i:0"><div>
+      <p class="eyebrow">${rel} · Semana ${isoWeek(mon)}</p>
+      <h1>${range}</h1>
+      <div class="who">${avatar(slot)}<div><b style="font-weight:600">${which === 'mine' ? 'Mis tareas' : 'Tareas de ' + esc(nm(slot))}</b><div class="muted" style="font-size:13px">${ws.done} de ${ws.total} hechas · ${pctw}%${missed ? ` · <span style="color:var(--danger)">${missed} sin hacer</span>` : ''}</div></div></div></div>
+    <div class="wk-nav"><button class="icon-btn" data-act="week" data-d="-1" data-w="${which}" aria-label="Semana anterior">${ICON.left}</button>
+      <button class="btn btn-soft btn-sm" data-act="week" data-d="0" data-w="${which}">Hoy</button>
+      <button class="icon-btn" data-act="week" data-d="1" data-w="${which}" aria-label="Semana siguiente">${ICON.right}</button>
+      <button class="btn btn-primary btn-sm" data-act="new" data-owner="${slot}">${ICON.plus}<span>Nueva</span></button></div></section>`;
+  if (flex.length) html += `<div style="--i:1"><div class="sec-h" style="margin-top:4px"><h2>Cuando quieras esta semana</h2><span class="muted">${flex.filter(t => isDone(t, mon)).length}/${flex.length}</span></div>${tasksUL(flex, mon, {})}<div style="height:16px"></div></div>`;
+  html += `<div class="week" style="--i:2">${days.map(d => {
+    const ts = tasksFor(slot, d), st = dayStats(slot, d);
+    return `<section class="day${d === today ? ' today' : ''}${d < today ? ' past' : ''}" aria-label="${DOW[wd(d)]} ${parseD(d).getDate()}">
+      <div class="day-h"><span class="dw">${DOW3[wd(d)]}</span><span class="num">${parseD(d).getDate()}</span>
+        <span class="cnt">${st.total ? st.done + '/' + st.total : ''}</span>
+        <button class="mini-add" data-act="new" data-owner="${slot}" data-date="${d}" aria-label="Añadir tarea el ${fmtShort(d)}">${ICON.plus}</button></div>
+      ${ts.length ? tasksUL(ts, d, {}) : '<p class="free">Libre</p>'}</section>`;
+  }).join('')}</div>`;
+  return html;
+}
+
+/* ---------- CASTIGOS ---------- */
+function viewPunish() {
+  const me = ME(), ot = oth(me), today = todayStr();
+  const list = Object.values(S.punish);
+  const toImpose = list.filter(p => p.creditor === me && p.status === 'pending').sort((a, b) => (a.at || 0) - (b.at || 0));
+  const waiting = list.filter(p => p.debtor === me && p.status === 'pending');
+  const pun = allTasks().filter(t => t.origin === 'punishment' && t.date >= addDays(today, -1) && !isDone(t, t.date));
+  const mineT = pun.filter(t => t.owner === me).sort((a, b) => a.date.localeCompare(b.date));
+  const theirT = pun.filter(t => t.owner === ot).sort((a, b) => a.date.localeCompare(b.date));
+  const hist = list.filter(p => p.status !== 'pending').sort((a, b) => (b.resolvedAt || b.at || 0) - (a.resolvedAt || a.at || 0)).slice(0, 30);
+  const cnt = s => list.filter(p => p.debtor === s && p.status === 'assigned').length;
+  const stTag = p => p.status === 'assigned' ? '<span class="tag">Castigado</span>' : p.status === 'forgiven' ? '<span class="tag tag-ok">Perdonado</span>' : p.status === 'void' ? '<span class="tag tag-ok">Resuelta al completarla</span>' : '<span class="tag tag-ok">Resuelta</span>'; 
+  const ptRow = t => `<li class="task" style="--c:var(--${t.owner === 'b' ? 'b' : 'a'})"><span class="mark" aria-hidden="true">${CHECK}</span><button class="task-body" data-act="${canEdit(t) ? 'edit' : 'view'}" data-id="${esc(t.id)}"><span class="t-title">${esc(t.title)}</span><span class="t-meta"><span class="m">${fmtShort(t.date)}</span>${dots(costOf(t))}</span></button></li>`;
+  let html = `<section class="wk-head" style="--i:0"><div><p class="eyebrow">Reglas del juego</p><h1>Castigos</h1>
+      <p class="muted" style="max-width:52ch">A medianoche se revisa lo que quedó sin hacer mientras Pacto esté abierto. Si ambos lo cerráis, recuperará los días pendientes la próxima vez que entréis. Quien impone el castigo elige tareas de coste equivalente.</p></div>
+      <div class="wk-nav"><button class="btn btn-primary" data-act="impose">Imponer castigo a ${esc(nm(ot))}</button></div></section>`;
+  html += `<div class="stats" style="--i:1"><div class="stat"><b>${toImpose.length}</b><span>por imponer</span></div><div class="stat"><b>${cnt(me)}</b><span>recibidos por ti</span></div><div class="stat"><b>${cnt(ot)}</b><span>recibidos por ${esc(nm(ot))}</span></div></div>`;
+  html += `<div class="two" style="--i:2"><div>
+    <div class="sec-h"><h2>Por imponer</h2></div>
+    ${toImpose.length ? `<div class="alerts" style="margin:0">${toImpose.map(p => `<div class="alert"><div><b>${esc(nm(p.debtor))} no hizo «${esc(p.title)}»</b><span>${p.flex ? 'Semana del ' + fmtShort(mondayOf(p.date)) : fmtShort(p.date)} · esfuerzo ${costOf(p)}</span></div><div class="row"><button class="btn btn-primary btn-sm" data-act="impose" data-pid="${esc(p.id)}">Elegir</button><button class="btn btn-ghost btn-sm" data-act="forgive" data-pid="${esc(p.id)}">Perdonar</button></div></div>`).join('')}</div>` : '<div class="empty"><b>Todo en orden</b>No tienes castigos pendientes de imponer.</div>'}
+    ${waiting.length ? `<div class="sec-h"><h2>Esperando a ${esc(nm(ot))}</h2></div><div class="alerts" style="margin:0">${waiting.map(p => `<div class="alert soft"><div><b>«${esc(p.title)}»</b><span>${fmtShort(p.date)} · ${esc(nm(ot))} elegirá tu castigo</span></div></div>`).join('')}</div>` : ''}
+    <div class="sec-h"><h2>Mis castigos por cumplir</h2></div>
+    ${mineT.length ? `<ul class="tasks">${mineT.map(ptRow).join('')}</ul>` : '<div class="empty">Ninguno. Así se hace.</div>'}
+    ${theirT.length ? `<div class="sec-h"><h2>Castigos de ${esc(nm(ot))}</h2></div><ul class="tasks">${theirT.map(ptRow).join('')}</ul>` : ''}
+  </div><div><div class="sec-h"><h2>Historial</h2></div>
+    <div class="card">${hist.length ? `<ul class="hist">${hist.map(p => `<li><div><b>${esc(nm(p.debtor))}</b> · «${esc(p.title)}»<small>${fmtShort(p.date)}${p.manual ? ' · manual' : ''} · esfuerzo ${costOf(p)}</small></div>${stTag(p)}</li>`).join('')}</ul>` : '<p class="muted">Aún no hay historial.</p>'}</div></div></div>`;
+  return html;
+}
+
+/* ---------- AJUSTES ---------- */
+const inviteLink = () => `${location.origin}${location.pathname}#j=${b64enc(JSON.stringify({ u: cfg.dbUrl, r: cfg.room }))}`;
+const syncLabel = () => ({ online: 'En directo', connecting: 'Conectando…', offline: pending.length ? `Sin conexión · ${pending.length} cambio${pending.length === 1 ? '' : 's'} en cola` : 'Sin conexión', off: 'Solo este dispositivo' }[cfg && cfg.mode === 'sync' ? Sync.status : 'off'] || '');
+function viewSettings() {
+  const pref = document.documentElement.dataset.pref || 'auto';
+  const bank = Object.entries(S.bank).map(([id, b]) => ({ id, ...b })).sort((x, y) => x.cost - y.cost || String(x.title).localeCompare(String(y.title)));
+  const sel = (id, c) => `<select class="inp" data-bank-cost="${esc(id)}" aria-label="Esfuerzo">${[1,2,3,4,5].map(n => `<option value="${n}"${n === Number(c) ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  const syncCard = cfg.mode === 'sync'
+    ? `<div class="card"><h3>Sincronización</h3><p class="muted">Conectado. Todo lo que cambiéis se ve al instante en el otro móvil.</p>
+        <div class="kv"><span>Estado</span><b style="font-weight:600">${esc(syncLabel())}</b></div>
+        <label class="field"><span>Enlace de invitación para ${esc(nm(oth(ME())))}</span><input readonly id="inv" value="${esc(inviteLink())}"></label>
+        <div class="row"><button class="btn btn-soft" data-act="copy-invite">${ICON.copy}Copiar enlace</button><button class="btn btn-ghost" data-act="sync-off">Desconectar</button></div>
+        <p class="muted" style="margin-top:12px;font-size:13px">Quien tenga este enlace puede ver y editar vuestro Pacto. Compartidlo solo entre vosotros.</p></div>`
+    : `<div class="card"><h3>Sincronización</h3><p class="muted">Ahora mismo vuestras tareas solo existen en este dispositivo. Actívala para compartirlas en tiempo real con ${esc(nm(oth(ME())))}.</p><div style="margin-top:14px"><button class="btn btn-primary" data-act="sync-on">Activar sincronización</button></div></div>`;
+  return `<section class="wk-head" style="--i:0"><div><p class="eyebrow">Pacto</p><h1>Ajustes</h1></div></section>
+  <div class="setgrid" style="--i:1"><div class="stack">
+    <div class="card"><h3>Vosotros</h3>
+      <label class="field"><span>Persona 1</span><input data-name="a" maxlength="24" value="${esc(nm('a'))}"></label>
+      <label class="field"><span>Persona 2</span><input data-name="b" maxlength="24" value="${esc(nm('b'))}"></label>
+      <div class="field"><span>En este dispositivo soy…</span><div class="seg"><button data-act="set-me" data-v="a" aria-pressed="${ME() === 'a'}"><i class="dot" style="--c:var(--a)"></i><span>${esc(nm('a'))}</span></button><button data-act="set-me" data-v="b" aria-pressed="${ME() === 'b'}"><i class="dot" style="--c:var(--b)"></i><span>${esc(nm('b'))}</span></button></div></div></div>
+    ${syncCard}
+    <div class="card"><p class="eyebrow">PLAN SEMANAL</p><h3>Rotación automática</h3>
+      <p class="muted">Preparad una semana base asignando las tareas a Persona 1 o Persona 2. Si activáis la rotación, las tareas recurrentes intercambian responsable cada lunes: una semana como el plan, la siguiente al revés, y así sucesivamente. Las tareas puntuales y los castigos no cambian de dueño.</p>
+      <label class="switch" style="margin-top:12px"><input type="checkbox" data-setting="rotation" ${S.meta.settings.rotation === true ? 'checked' : ''}><span><b style="font-weight:600">Alternar responsables cada semana</b><br><span class="muted">${S.meta.settings.rotation === true ? `Rotación activa · semana base desde ${fmtShort(validYMD(S.meta.settings.rotationAnchor) ? mondayOf(S.meta.settings.rotationAnchor) : mondayOf(todayStr()))}` : 'Desactivada · se mantienen los responsables del plan base'}</span></span></label>
+      <p class="muted" style="margin-top:10px;font-size:12.5px">Al activarla, esta semana queda como semana base. Podéis seguir editando el plan en «Mi semana»; asignad cada tarea a la persona que la hará en la semana base.</p></div>
+    <div class="card"><h3>Reglas y avisos</h3>
+      <label class="switch" style="margin-top:10px"><input type="checkbox" data-setting="chain" ${S.meta.settings.chain !== false ? 'checked' : ''}><span><b style="font-weight:600">Los castigos incumplidos también castigan</b><br><span class="muted">Si no haces una tarea de castigo, se genera otro castigo.</span></span></label>
+      <div class="kv" style="margin-top:12px"><span>Avisos del navegador<br><span class="muted" style="font-size:12.5px">Solo suenan con la pestaña abierta o en segundo plano.</span></span><button class="btn btn-soft btn-sm" data-act="notif">${typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'Activados' : 'Activar'}</button></div>
+      <div class="field"><span>Tema</span><div class="seg"><button data-act="set-theme" data-v="auto" aria-pressed="${pref === 'auto'}">Auto</button><button data-act="set-theme" data-v="light" aria-pressed="${pref === 'light'}">Claro</button><button data-act="set-theme" data-v="dark" aria-pressed="${pref === 'dark'}">Oscuro</button></div></div></div>
+  </div><div class="stack">
+    <div class="card"><h3>Banco de castigos</h3><p class="muted">Tareas entre las que se elige al castigar. El número es el esfuerzo (1 ligera – 5 dura).</p>
+      <div id="bank-list">${bank.map(b => `<div class="bank-row"><input class="inp" data-bank-title="${esc(b.id)}" maxlength="60" value="${esc(b.title)}" aria-label="Nombre">${sel(b.id, b.cost)}<button class="icon-btn" data-act="bank-del" data-id="${esc(b.id)}" aria-label="Quitar">${ICON.trash}</button></div>`).join('')}</div>
+      <div class="bank-row" style="margin-top:14px"><input class="inp" id="nb-title" maxlength="60" placeholder="Nueva tarea de castigo"><select class="inp" id="nb-cost" aria-label="Esfuerzo">${[1,2,3,4,5].map(n => `<option value="${n}"${n === 2 ? ' selected' : ''}>${n}</option>`).join('')}</select><button class="icon-btn" data-act="bank-add" aria-label="Añadir">${ICON.plus}</button></div></div>
+    <div class="card"><h3>Datos</h3><p class="muted">Importa vuestra planificación en papel o guarda una copia de seguridad.</p>
+      <div class="row" style="margin-top:14px"><button class="btn btn-primary" data-act="import-plan">${ICON.up}Importar planificación</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn btn-soft" data-act="export">${ICON.down}Descargar copia</button><button class="btn btn-soft" data-act="import-json">${ICON.up}Restaurar copia</button></div>
+      <input type="file" id="file-json" accept="application/json,.json" hidden>
+      <div class="row" style="margin-top:22px"><button class="btn btn-ghost btn-sm" data-act="reset">Vaciar todas las tareas</button><button class="btn btn-ghost btn-sm" data-act="forget">Olvidar este dispositivo</button></div></div>
+    <p class="muted" style="text-align:center;font-size:12.5px">Pacto · v1.1 · hecho a mano para dos</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   Formularios
+   ============================================================ */
+function openTaskView(t) {
+  const lines = [
+    ['Para', nm(t.owner)], ['Cuándo', t.type === 'once' ? fmtShort(t.date) : recurLabel(t)],
+    t.time && t.type !== 'flex' ? ['Hora', t.time] : null, ['Esfuerzo', `${costOf(t)} · ${COST_LABEL[costOf(t)]}`],
+    t.notes ? ['Notas', t.notes] : null,
+    t.origin === 'punishment' ? ['Origen', `Castigo impuesto por ${nm(t.by)}`] : (t.by ? ['Añadida por', nm(t.by)] : null)
+  ].filter(Boolean);
+  const l = openLayer(`<div class="sheet-h"><h2 class="sheet-title">${esc(t.title)}</h2><button class="icon-btn" data-close aria-label="Cerrar">${ICON.x}</button></div>
+    <div style="margin-top:10px">${lines.map(([k, v]) => `<div class="kv"><span class="muted">${esc(k)}</span><b style="font-weight:500;text-align:right">${esc(v)}</b></div>`).join('')}</div>
+    ${t.origin === 'punishment' ? `<p class="muted" style="margin-top:12px;display:flex;gap:6px;align-items:center">${ICON.lock} Solo quien impuso el castigo puede cambiarlo.</p>` : ''}`, 'sheet-sm');
+  return l;
+}
+
+function openTaskForm(task, defaults = {}) {
+  const today = todayStr();
+  const f = task
+    ? { owner: task.owner, title: task.title, type: task.type, days: taskDays(task), every: Number(task.every) || 1, date: task.date || today, time: task.time || '', cost: costOf(task), notes: task.notes || '', start: task.start || today }
+    : { owner: defaults.owner || ME(), title: '', type: defaults.date ? 'once' : 'daily', days: [], every: 1, date: defaults.date || today, time: '', cost: 2, notes: '', start: today };
+  const types = [['daily', 'Cada día'], ['days', 'Días fijos'], ['once', 'Un día'], ['flex', 'Flexible']];
+  const hints = { daily: 'Se repite todos los días.', days: 'Elige qué días de la semana se repite.', once: 'Solo ocurre en la fecha elegida.', flex: 'Hay que hacerla una vez durante la semana, el día que quieras. Se revisa el domingo a medianoche.' };
+  const l = openLayer(`<form novalidate>
+    <div class="sheet-h"><h2 class="sheet-title">${task ? 'Editar tarea' : 'Nueva tarea'}</h2><button type="button" class="icon-btn" data-close aria-label="Cerrar">${ICON.x}</button></div>
+    <label class="field"><span>Tarea</span><input name="title" maxlength="80" autocomplete="off" placeholder="Ej. Fregar los platos" autofocus></label>
+    <div class="field"><span>Para</span><div class="seg" data-seg="owner">${['a', 'b'].map(s => `<button type="button" data-v="${s}"><i class="dot" style="--c:var(--${s})"></i><span>${esc(nm(s))}</span></button>`).join('')}</div></div>
+    <div class="field"><span>Cuándo</span><div class="seg" data-seg="type">${types.map(([v, n]) => `<button type="button" data-v="${v}"><span>${n}</span></button>`).join('')}</div><span class="hint" id="hint"></span></div>
+    <div class="field" data-for="days"><span>Días</span><div class="chips">${DOW1.map((n, i) => `<button type="button" data-day="${i}" aria-label="${DOW[i]}">${n}</button>`).join('')}</div></div>
+    <div class="field" data-for="days"><label><span>Frecuencia</span><select name="every"><option value="1">Cada semana</option><option value="2">Cada 2 semanas</option><option value="3">Cada 3 semanas</option><option value="4">Cada 4 semanas</option></select></label></div>
+    <div class="field" data-for="once"><label><span>Fecha</span><input type="date" name="date"></label></div>
+    <div class="field" data-for="daily days once"><label><span>Hora (opcional)</span><input type="time" name="time"></label></div>
+    <div class="field"><span>Esfuerzo</span><div class="pills">${[1,2,3,4,5].map(n => `<button type="button" data-cost="${n}">${n}</button>`).join('')}</div><span class="hint" id="costhint"></span></div>
+    <label class="field"><span>Notas (opcional)</span><textarea name="notes" maxlength="200" placeholder="Detalles, dónde está el material…"></textarea></label>
+    <div class="field" data-for="daily days flex"><label><span>Empieza el</span><input type="date" name="start"></label></div>
+    <p class="err" id="ferr" role="alert"></p>
+    <div class="sheet-actions">${task ? `<button type="button" class="btn btn-ghost grow" data-del>${ICON.trash}Eliminar</button>` : ''}<button type="button" class="btn btn-ghost" data-close>Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div></form>`);
+  const root = l.sheet, form = $('form', root);
+  const q = s => $(s, root);
+  const field = name => form.elements.namedItem(name);
+  field('title').value = f.title; field('every').value = String(f.every); field('date').value = f.date; field('time').value = f.time; field('notes').value = f.notes; field('start').value = f.start;
+  function paint() {
+    $$('[data-seg]', root).forEach(g => $$('button', g).forEach(b => b.setAttribute('aria-pressed', String(f[g.dataset.seg] === b.dataset.v))));
+    $$('[data-day]', root).forEach(b => b.setAttribute('aria-pressed', String(f.days.includes(Number(b.dataset.day)))));
+    $$('[data-cost]', root).forEach(b => b.setAttribute('aria-pressed', String(f.cost === Number(b.dataset.cost))));
+    $$('[data-for]', root).forEach(el => { el.hidden = !el.dataset.for.split(' ').includes(f.type); });
+    q('#hint').textContent = hints[f.type];
+    q('#costhint').textContent = `${COST_LABEL[f.cost]} — también es lo que cuenta para equilibrar un castigo.`;
+  }
+  paint();
+  root.addEventListener('click', e => {
+    const sg = e.target.closest('[data-seg] [data-v]');
+    if (sg) { f[sg.parentElement.dataset.seg] = sg.dataset.v; paint(); return; }
+    const dy = e.target.closest('[data-day]');
+    if (dy) { const n = Number(dy.dataset.day); f.days = f.days.includes(n) ? f.days.filter(x => x !== n) : f.days.concat(n); paint(); return; }
+    const c = e.target.closest('[data-cost]');
+    if (c) { f.cost = Number(c.dataset.cost); paint(); return; }
+    if (e.target.closest('[data-del]')) {
+      confirmBox({ title: '¿Eliminar esta tarea?', text: task.type === 'once' ? 'Se borrará del todo.' : 'Dejará de aparecer desde hoy. Lo ya registrado se conserva.', ok: 'Eliminar', danger: true }).then(ok => { if (ok) { deleteTask(task); l.close(); } });
+    }
+  });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const err = m => { q('#ferr').textContent = m; };
+    f.title = field('title').value.trim(); f.every = Number(field('every').value) || 1; f.date = field('date').value; f.time = field('time').value; f.notes = field('notes').value.trim(); f.start = field('start').value || today;
+    if (!f.title) return err('Ponle un nombre a la tarea.');
+    if (f.type === 'days' && !f.days.length) return err('Elige al menos un día de la semana.');
+    if (f.type === 'once' && !validYMD(f.date)) return err('Elige una fecha válida.');
+    saveTaskFrom(f, task);
+    l.close();
+  });
+}
+function saveTaskFrom(f, orig) {
+  const today = todayStr();
+  const obj = { owner: f.owner, title: f.title, type: f.type, cost: f.cost, created: orig ? orig.created : nowMs(), by: orig ? (orig.by || ME()) : ME() };
+  if (f.type === 'days') { obj.days = f.days.slice().sort((a, b) => a - b).join(','); if (f.every > 1) obj.every = f.every; }
+  if (f.type === 'once') { obj.date = f.date; obj.start = f.date; } else obj.start = f.start || today;
+  if (f.time && f.type !== 'flex') obj.time = f.time;
+  if (f.notes) obj.notes = f.notes;
+  if (orig && orig.origin) { obj.origin = orig.origin; if (orig.pid) obj.pid = orig.pid; }
+  if (!orig) { const id = newId('t'); obj.id = id; commit({ [`tasks/${id}`]: obj }); toast('Tarea añadida'); return; }
+  const schedChanged = orig.owner !== f.owner || orig.type !== f.type || costOf(orig) !== f.cost ||
+    orig.title !== f.title || (orig.time || '') !== (f.time || '') ||
+    (f.type === 'days' && (taskDays(orig).join() !== f.days.slice().sort((a, b) => a - b).join() || (Number(orig.every) || 1) !== f.every));
+  if (orig.type !== 'once' && orig.start < today && schedChanged) {
+    // Se conserva el historial: la versión antigua termina ayer y nace una nueva desde hoy.
+    const id = newId('t'); obj.id = id; obj.start = f.type === 'once' ? f.date : today; obj.created = nowMs();
+    const u = { [`tasks/${id}`]: obj };
+    u[`tasks/${orig.id}/end`] = addDays(today, -1);
+    commit(u); toast('Cambios guardados desde hoy');
+  } else {
+    obj.id = orig.id; if (orig.end && f.type !== 'once') obj.end = orig.end;
+    commit({ [`tasks/${orig.id}`]: obj }); toast('Cambios guardados');
+  }
+}
+
+/* ---------- Imponer castigo ---------- */
+function openImpose(pid) {
+  const p = pid ? S.punish[pid] : null;
+  if (pid && (!p || p.status !== 'pending')) { toast('Este castigo ya estaba resuelto'); return; }
+  const me = ME(), debtor = p ? p.debtor : oth(me);
+  const hour = new Date(nowMs()).getHours();
+  const st = { req: p ? Math.max(1, Number(p.cost) || 1) : 2, qty: {}, custom: [], when: hour < 20 ? 'today' : 'tomorrow', date: todayStr() };
+  const bank = Object.entries(S.bank).map(([id, b]) => ({ id, title: b.title, cost: Math.min(5, Math.max(1, Number(b.cost) || 1)) })).sort((x, y) => x.cost - y.cost || String(x.title).localeCompare(String(y.title)));
+  const total = () => bank.reduce((s, b) => s + (st.qty[b.id] || 0) * b.cost, 0) + st.custom.reduce((s, c) => s + c.cost, 0);
+  const l = openLayer(`<div class="sheet-h"><h2 class="sheet-title">Castigo para ${esc(nm(debtor))}</h2><button class="icon-btn" data-close aria-label="Cerrar">${ICON.x}</button></div>
+    ${p ? `<div class="reason"><span class="eyebrow">Se le pasó</span><p>«${esc(p.title)}»</p><span class="muted">${p.flex ? 'Semana del ' + fmtShort(mondayOf(p.date)) : fmtShort(p.date)} · esfuerzo ${dots(costOf(p))}</span></div>`
+      : `<label class="field"><span>Motivo</span><input id="im-reason" maxlength="80" placeholder="Ej. No avisó de que llegaba tarde" autocomplete="off"></label>
+         <div class="field"><span>Esfuerzo a compensar</span><div class="pills" id="im-req">${[1,2,3,4,5].map(n => `<button type="button" data-req="${n}">${n}</button>`).join('')}</div></div>`}
+    <div class="field" style="margin-bottom:0"><span>Elige tareas equivalentes</span></div>
+    <div id="im-meter"></div><div class="picks" id="im-picks"></div>
+    <div class="custom-add"><input class="inp" id="c-title" maxlength="60" placeholder="Otra tarea…"><select class="inp" id="c-cost" aria-label="Esfuerzo">${[1,2,3,4,5].map(n => `<option value="${n}">${n}</option>`).join('')}</select><button type="button" class="btn btn-soft btn-sm" id="c-add">Añadir</button></div>
+    <div class="field"><span>Para cuándo</span><div class="seg" id="im-when"><button type="button" data-w="today">Hoy</button><button type="button" data-w="tomorrow">Mañana</button><button type="button" data-w="other">Otro día</button></div><input type="date" id="im-date" hidden></div>
+    <p class="err" id="im-err" role="alert"></p>
+    <div class="sheet-actions">${p ? '<button type="button" class="btn btn-ghost grow" id="im-forgive">Perdonar</button>' : ''}<button type="button" class="btn btn-ghost" data-close>Cancelar</button><button type="button" class="btn btn-primary" id="im-ok" disabled>Imponer castigo</button></div>`, 'sheet-lg');
+  const q = s => $(s, l.sheet);
+  q('#im-date').value = st.date; q('#im-date').min = todayStr();
+  function paint() {
+    const t = total(), ok = t === st.req;
+    q('#im-meter').innerHTML = `<div class="meter ${ok ? 'ok' : t > st.req ? 'over' : ''}"><i style="width:${Math.min(100, Math.round(t / st.req * 100))}%"></i></div>
+      <div class="meter-t"><span>Elegido: <b>${t}</b> de <b>${st.req}</b></span><span>${t < st.req ? `Faltan ${st.req - t}` : t === st.req ? 'Equivalencia exacta' : `Reduce ${t - st.req}`}</span></div>`;
+    q('#im-picks').innerHTML = bank.map(b => `<div class="pick${st.qty[b.id] ? ' sel' : ''}"><div class="pt"><span>${esc(b.title)}</span>${dots(b.cost)}</div><div class="stepper"><button type="button" data-step="-1" data-id="${esc(b.id)}" aria-label="Quitar uno" ${!st.qty[b.id] ? 'disabled' : ''}>−</button><b>${st.qty[b.id] || 0}</b><button type="button" data-step="1" data-id="${esc(b.id)}" aria-label="Añadir uno" ${t + b.cost > st.req ? 'disabled' : ''}>+</button></div></div>`).join('') +
+      st.custom.map((c, i) => `<div class="pick sel"><div class="pt"><span>${esc(c.title)}</span>${dots(c.cost)}</div><div class="stepper"><button type="button" data-cdel="${i}" aria-label="Quitar">×</button></div></div>`).join('');
+    $$('#im-when button', l.sheet).forEach(b => b.setAttribute('aria-pressed', String(st.when === b.dataset.w)));
+    q('#im-date').hidden = st.when !== 'other';
+    $$('#im-req button', l.sheet).forEach(b => b.setAttribute('aria-pressed', String(st.req === Number(b.dataset.req))));
+    q('#im-ok').disabled = !ok;
+    const customCost = Number(q('#c-cost').value) || 1;
+    q('#c-add').disabled = !q('#c-title').value.trim() || t + customCost > st.req;
+  }
+  q('#c-title').addEventListener('input', paint);
+  q('#c-cost').addEventListener('change', paint);
+  paint();
+  l.sheet.addEventListener('click', e => {
+    const s = e.target.closest('[data-step]');
+    if (s) { const id = s.dataset.id; st.qty[id] = Math.max(0, (st.qty[id] || 0) + Number(s.dataset.step)); paint(); return; }
+    const cd = e.target.closest('[data-cdel]'); if (cd) { st.custom.splice(Number(cd.dataset.cdel), 1); paint(); return; }
+    const w = e.target.closest('#im-when [data-w]'); if (w) { st.when = w.dataset.w; paint(); return; }
+    const r = e.target.closest('[data-req]'); if (r) { st.req = Number(r.dataset.req); paint(); return; }
+    if (e.target.closest('#c-add')) {
+      const title = q('#c-title').value.trim(), cost = Number(q('#c-cost').value) || 1;
+      if (!title) { q('#c-title').focus(); return; }
+      if (total() + cost > st.req) { q('#im-err').textContent = `Esa tarea añadiría ${cost} puntos y superaría el límite de ${st.req}.`; return; }
+      st.custom.push({ title, cost }); q('#c-title').value = ''; q('#im-err').textContent = ''; paint(); return;
+    }
+    if (e.target.closest('#im-forgive')) { l.close(); forgive(pid); return; }
+    if (e.target.closest('#im-ok')) confirmImpose();
+  });
+  function confirmImpose() {
+    let date = st.when === 'today' ? todayStr() : st.when === 'tomorrow' ? addDays(todayStr(), 1) : q('#im-date').value;
+    if (!validYMD(date) || date < todayStr()) { q('#im-err').textContent = 'Elige una fecha válida (hoy o posterior).'; return; }
+    if (total() !== st.req) { q('#im-err').textContent = `El esfuerzo debe ser exactamente ${st.req}. Ajusta las tareas elegidas.`; paint(); return; }
+    const id = pid || newId('p'), u = {}, assigned = {};
+    const mk = (title, cost) => { const tid = newId('t'); assigned[tid] = 1; u[`tasks/${tid}`] = { id: tid, owner: debtor, title, type: 'once', date, start: date, cost, by: me, origin: 'punishment', pid: id, created: nowMs() }; };
+    bank.forEach(b => { for (let i = 0; i < (st.qty[b.id] || 0); i++) mk(b.title, b.cost); });
+    st.custom.forEach(c => mk(c.title, c.cost));
+    const base = p ? clone(p) : { id, debtor, creditor: me, title: (q('#im-reason').value.trim() || 'Castigo manual'), date: todayStr(), cost: st.req, manual: 1, at: nowMs() };
+    u[`punish/${id}`] = Object.assign(base, { status: 'assigned', assigned, resolvedAt: nowMs(), by: me });
+    commit(u); l.close();
+    toast(`Castigo impuesto a ${nm(debtor)}`);
+  }
+}
+async function forgive(pid) {
+  const p = S.punish[pid]; if (!p || p.status !== 'pending') return;
+  const ok = await confirmBox({ title: '¿Perdonar este castigo?', text: `${nm(p.debtor)} se libra de «${p.title}».`, ok: 'Perdonar' });
+  if (!ok) return;
+  commit({ [`punish/${pid}/status`]: 'forgiven', [`punish/${pid}/resolvedAt`]: nowMs() });
+  toast('Castigo perdonado');
+}
+
+/* ---------- Importar planificación en texto ---------- */
+const DMAP = { l: 0, lu: 0, lun: 0, lunes: 0, m: 1, ma: 1, mar: 1, martes: 1, x: 2, mi: 2, mie: 2, miercoles: 2, j: 3, ju: 3, jue: 3, jueves: 3, v: 4, vi: 4, vie: 4, viernes: 4, s: 5, sa: 5, sab: 5, sabado: 5, d: 6, do: 6, dom: 6, domingo: 6 };
+const COSTW = { ligera: 1, baja: 1, facil: 2, sencilla: 2, media: 3, normal: 3, pesada: 4, alta: 4, dura: 5, 'muy alta': 5 };
+function parseWhen(raw) {
+  const s = norm(raw); if (!s) return null;
+  if (/^(diari[ao]s?|todos( los dias)?|cada dia|a diario)$/.test(s)) return { type: 'daily' };
+  if (/^(semana|semanal|flexible|cualquier dia|1 vez por semana|una vez por semana|una vez a la semana)$/.test(s)) return { type: 'flex' };
+  if (/^(laborables|entre semana|l-v|lun-vie|lunes a viernes|de lunes a viernes)$/.test(s)) return { type: 'days', days: [0, 1, 2, 3, 4] };
+  if (/^(finde|findes|fin de semana|fines de semana|s-d)$/.test(s)) return { type: 'days', days: [5, 6] };
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) { const date = `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`; return validYMD(date) ? { type: 'once', date } : null; }
+  m = s.match(/^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?$/);
+  if (m) {
+    const now = new Date(nowMs()); let y = m[3] ? +m[3] : now.getFullYear(); if (y < 100) y += 2000;
+    let date = `${y}-${pad(+m[2])}-${pad(+m[1])}`;
+    if (!m[3] && diffDays(date, todayStr()) > 60) date = `${y + 1}-${pad(+m[2])}-${pad(+m[1])}`;
+    if (!validYMD(date)) return null;
+    return { type: 'once', date };
+  }
+  m = s.match(/^([a-z]+)(?:\s*-\s*|\s+a\s+|\s+hasta\s+)([a-z]+)$/);
+  if (m && DMAP[m[1]] !== undefined && DMAP[m[2]] !== undefined) {
+    let i = DMAP[m[1]]; const e = DMAP[m[2]], days = [i];
+    while (i !== e) { i = (i + 1) % 7; days.push(i); }
+    return days.length === 7 ? { type: 'daily' } : { type: 'days', days };
+  }
+  const toks = s.replace(/\by\b/g, ' ').split(/[\s,\/+&·]+/).filter(Boolean);
+  if (toks.length && toks.every(x => DMAP[x] !== undefined)) {
+    const days = [...new Set(toks.map(x => DMAP[x]))].sort((a, b) => a - b);
+    return days.length === 7 ? { type: 'daily' } : { type: 'days', days };
+  }
+  return null;
+}
+function parsePlan(text) {
+  const out = [];
+  String(text || '').split(/\r?\n/).forEach((line, idx) => {
+    const raw = line.trim(); if (!raw) return;
+    const sep = raw.includes('\t') ? '\t' : raw.includes(';') ? ';' : raw.includes('|') ? '|' : null;
+    const cells = (sep ? raw.split(sep) : [raw]).map(x => x.trim());
+    if (idx === 0 && /^(tarea|titulo|título|nombre)/i.test(cells[0]) && cells.length > 1) return;
+    const [title, whenRaw, costRaw, whoRaw, timeRaw] = cells;
+    const it = { line: raw, ok: false };
+    if (!title) { it.error = 'Falta el título'; out.push(it); return; }
+    if (cells.length < 2) { it.error = 'Faltan los días (separa con ; )'; out.push(it); return; }
+    const when = parseWhen(whenRaw);
+    if (!when) { it.error = `No entiendo «${whenRaw}»`; out.push(it); return; }
+    let cost = 2;
+    if (costRaw) { const n = parseInt(costRaw, 10); cost = !isNaN(n) ? Math.min(5, Math.max(1, n)) : (COSTW[norm(costRaw)] || 2); }
+    let owner = ME();
+    if (whoRaw) {
+      const w = norm(whoRaw);
+      if (w === 'yo' || w === 'me') owner = ME();
+      else if (w === 'pareja' || w === 'ella' || w === 'el' || w === 'otro') owner = oth(ME());
+      else if (w === norm(nm('a'))) owner = 'a';
+      else if (w === norm(nm('b'))) owner = 'b';
+      else if (norm(nm('a')).startsWith(w)) owner = 'a';
+      else if (norm(nm('b')).startsWith(w)) owner = 'b';
+      else { it.error = `Persona desconocida «${whoRaw}»`; out.push(it); return; }
+    }
+    let time = '';
+    if (timeRaw) { const m = timeRaw.match(/^(\d{1,2})[:h.](\d{2})$/); if (m && +m[1] < 24 && +m[2] < 60) time = `${pad(+m[1])}:${m[2]}`; else { it.error = `Hora no válida «${timeRaw}»`; out.push(it); return; } }
+    it.ok = true; it.task = Object.assign({ title, cost, owner, time }, when); out.push(it);
+  });
+  return out;
+}
+const describeWhen = t => t.type === 'once' ? fmtShort(t.date) : recurLabel(Object.assign({}, t, { days: (t.days || []).join(',') }));
+function openImportPlan() {
+  const example = `Fregar los platos ; diaria ; 2 ; ${nm('a')} ; 21:00\nSacar la basura ; L X V ; 1 ; ${nm('b')}\nColada ; sábado ; 3 ; ${nm('b')}\nLimpiar el baño ; semana ; 4 ; ${nm('a')}\nCita dentista ; ${ymd(addDays2(todayStr(), 9))} ; 1 ; ${nm('a')} ; 17:30`;
+  function addDays2(s, n) { return parseD(addDays(s, n)); }
+  const l = openLayer(`<div class="sheet-h"><h2 class="sheet-title">Importar planificación</h2><button class="icon-btn" data-close aria-label="Cerrar">${ICON.x}</button></div>
+    <p class="muted" style="margin-top:6px">Una tarea por línea: <b>Título ; días ; esfuerzo ; persona ; hora</b>. Solo el título y los días son obligatorios. También puedes pegar filas copiadas desde Excel o Google Sheets.</p>
+    <p class="muted" style="margin-top:8px;font-size:13px"><b>Días</b>: diaria · L X V · lun-vie · fin de semana · semana (una vez, cualquier día) · una fecha (2026-10-20 o 20/10).</p>
+    <div class="field"><textarea id="pl-text" style="min-height:150px;font-size:14px;font-family:ui-monospace,Menlo,monospace" placeholder="${esc(example)}" spellcheck="false"></textarea></div>
+    <div class="row"><button class="btn btn-soft btn-sm" id="pl-ex">Insertar ejemplo</button>
+      <label class="row" style="gap:8px;font-size:14px;color:var(--ink-2)">Empezar el <input type="date" class="inp" id="pl-start" style="width:auto;padding:8px 10px"></label></div>
+    <div id="pl-prev"></div><p class="err" id="pl-err" role="alert"></p>
+    <div class="sheet-actions"><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="pl-go" disabled>Importar</button></div>`, 'sheet-lg');
+  const q = s => $(s, l.sheet);
+  const mon = addDays(mondayOf(todayStr()), 7);
+  q('#pl-start').value = addDays(todayStr(), 1); q('#pl-start').min = todayStr();
+  let parsed = [];
+  function paint() {
+    parsed = parsePlan(q('#pl-text').value);
+    const ok = parsed.filter(x => x.ok);
+    q('#pl-go').disabled = !ok.length; q('#pl-go').textContent = ok.length ? `Importar ${ok.length} tarea${ok.length === 1 ? '' : 's'}` : 'Importar';
+    q('#pl-prev').innerHTML = parsed.length ? `<table class="prev"><thead><tr><th>Tarea</th><th>Cuándo</th><th>Quién</th><th></th></tr></thead><tbody>${parsed.map(x => x.ok
+      ? `<tr><td>${esc(x.task.title)}<br><span class="muted">${dots(x.task.cost)}${x.task.time ? ' · ' + esc(x.task.time) : ''}</span></td><td>${esc(describeWhen(x.task))}</td><td>${esc(nm(x.task.owner))}</td><td><span class="tag tag-ok">OK</span></td></tr>`
+      : `<tr><td colspan="3">${esc(x.line)}<br><span style="color:var(--danger)">${esc(x.error)}</span></td><td><span class="tag tag-late">Error</span></td></tr>`).join('')}</tbody></table>` : '';
+  }
+  q('#pl-text').addEventListener('input', paint);
+  q('#pl-ex').addEventListener('click', () => { q('#pl-text').value = example; paint(); });
+  q('#pl-go').addEventListener('click', () => {
+    const start = q('#pl-start').value || addDays(todayStr(), 1);
+    const u = {}; let n = 0;
+    parsed.filter(x => x.ok).forEach(x => {
+      const t = x.task, id = newId('t') + n++;
+      const o = { id, owner: t.owner, title: t.title, type: t.type, cost: t.cost, created: nowMs() + n, by: ME() };
+      if (t.type === 'days') o.days = t.days.join(',');
+      if (t.type === 'once') { o.date = t.date; o.start = t.date; } else o.start = start;
+      if (t.time) o.time = t.time;
+      u[`tasks/${id}`] = o;
+    });
+    commit(u); l.close(); toast(`${n} tareas importadas`);
+  });
+}
+
+/* ---------- Copias de seguridad ---------- */
+function exportData() {
+  downloadFile(`pacto-${todayStr()}.json`, JSON.stringify({ app: 'pacto', version: 1, exportedAt: new Date(nowMs()).toISOString(), state: S }, null, 2));
+  toast('Copia descargada');
+}
+function importJsonFile(file) {
+  if (file.size > 5 * 1024 * 1024) { toast('La copia supera el límite de 5 MB.'); return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    let data; try { data = JSON.parse(rd.result); } catch (e) { toast('El archivo no es una copia válida'); return; }
+    let st;
+    try { if (!data || data.app !== 'pacto' || !data.state) throw new Error(); st = sanitizeBackupState(data.state); }
+    catch (e) { toast('La copia no tiene una estructura válida de Pacto'); return; }
+    const n = Object.keys(st.tasks || {}).length;
+    const l = openLayer(`<h2 class="sheet-title">Restaurar copia</h2><p class="muted" style="margin:10px 0 0;font-size:15px">La copia contiene ${n} tarea${n === 1 ? '' : 's'}${data.exportedAt ? ' (' + esc(String(data.exportedAt).slice(0, 10)) + ')' : ''}. ¿Cómo quieres aplicarla?</p>
+      <div class="choice"><button data-m="merge"><b>Fusionar</b><span>Añade lo que falta y conserva lo que ya tenéis.</span></button><button data-m="replace"><b>Sustituir todo</b><span>Reemplaza vuestras tareas, castigos y nombres por los de la copia.</span></button></div>
+      <div class="sheet-actions"><button class="btn btn-ghost" data-close>Cancelar</button></div>`, 'sheet-sm');
+    l.sheet.addEventListener('click', e => {
+      const b = e.target.closest('[data-m]'); if (!b) return;
+      const ns = normalize(clone(st));
+      if (b.dataset.m === 'replace') {
+        ns.lastReview = addDays(todayStr(), -1);
+        if (!Object.keys(ns.bank).length) ns.bank = defaultBank();
+        commit({ '/': ns });
+      } else {
+        const u = {};
+        // Fusionar significa añadir solo identificadores ausentes: una copia antigua nunca pisa datos actuales.
+        for (const k of ['tasks', 'done', 'punish', 'bank']) for (const [id, v] of Object.entries(ns[k])) if (!Object.prototype.hasOwnProperty.call(S[k], id)) u[`${k}/${id}`] = v;
+        commit(u);
+      }
+      l.close(); toast('Copia restaurada');
+    });
+  };
+  rd.readAsText(file);
+}
+
+/* ============================================================
+   Sincronización: asistente de conexión
+   ============================================================ */
+const RULES = `{\n  "rules": {\n    "rooms": {\n      "$room": { ".read": true, ".write": true }\n    }\n  }\n}`;
+function syncPanelHTML() {
+  return `<ol class="steps">
+    <li><b>Crea un proyecto gratuito.</b> Entra en <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a> con una cuenta de Google y pulsa «Crear un proyecto» (puedes desactivar Analytics). Solo lo hace una de las dos personas.</li>
+    <li><b>Activa Realtime Database.</b> En el menú «Compilación» (Build) elige «Realtime Database» → «Crear base de datos», escoge una región europea y empieza en modo bloqueado.</li>
+    <li><b>Pega estas reglas</b> en la pestaña «Reglas» y pulsa «Publicar».<pre class="code">${esc(RULES)}</pre><div style="margin-top:8px"><button type="button" class="btn btn-soft btn-sm" data-act="copy-rules">${ICON.copy}Copiar reglas</button></div><p class="muted" style="margin-top:8px;font-size:13px"><b>Importante:</b> esta versión usa el identificador aleatorio del enlace como llave compartida, sin cuentas. Cualquiera que obtenga el enlace puede leer y editar ese Pacto; no lo publiquéis ni lo enviéis a terceros.</p></li>
+    <li><b>Copia la dirección</b> de la pestaña «Datos» (empieza por https:// y termina en firebasedatabase.app o firebaseio.com) y pégala aquí.</li></ol>
+    <label class="field"><span>Dirección de la base de datos</span><input id="db-url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://tu-proyecto-default-rtdb.europe-west1.firebasedatabase.app"></label>
+    <p class="err" id="sync-err" role="alert"></p>`;
+}
+async function connectNew(url) {
+  url = String(url || '').trim().replace(/\/+$/, '');
+  if (!validFirebaseUrl(url)) throw new Error('Esa dirección no parece de Firebase Realtime Database. Debe empezar por https:// y terminar en firebasedatabase.app o firebaseio.com.');
+  const room = randomRoom();
+  const seed = clone(S); if (!seed.lastReview) seed.lastReview = addDays(todayStr(), -1);
+  let res;
+  try { res = await fetchT(`${url}/rooms/${room}.json`, { method: 'PUT', headers: JSONH, body: JSON.stringify(seed) }); }
+  catch (e) { throw new Error('No se pudo conectar. Revisa la dirección y tu conexión.'); }
+  if (res.status === 401 || res.status === 403) throw new Error('La base de datos rechaza la escritura. Comprueba que has publicado las reglas del paso 3.');
+  if (!res.ok) throw new Error(`Firebase respondió con un error (${res.status}). Revisa la dirección.`);
+  cfg = { mode: 'sync', dbUrl: url, room, me: (cfg && cfg.me) || 'a' };
+  save(LS.cfg, cfg); pending = []; savePending();
+  Sync.start();
+}
+function inviteHTML() {
+  return `<p class="muted" style="margin-top:8px;font-size:15px">Todo listo. Envía este enlace a ${esc(nm(oth(ME())))} y abridlo en su móvil: se conectará automáticamente.</p>
+    <label class="field"><span>Enlace de invitación</span><input readonly id="inv2" value="${esc(inviteLink())}"></label>
+    <div class="row"><button type="button" class="btn btn-soft" data-act="copy-invite2">${ICON.copy}Copiar enlace</button>${navigator.share ? '<button type="button" class="btn btn-soft" data-act="share-invite">Compartir</button>' : ''}</div>
+    <p class="muted" style="margin-top:12px;font-size:13px">Guarda el enlace: es la llave de vuestro Pacto. Quien lo tenga puede verlo y editarlo.</p>`;
+}
+function openSyncSetup() {
+  const l = openLayer(`<div class="sheet-h"><h2 class="sheet-title">Sincronizar con ${esc(nm(oth(ME())))}</h2><button class="icon-btn" data-close aria-label="Cerrar">${ICON.x}</button></div>
+    <div id="sp-body">${syncPanelHTML()}</div><div class="sheet-actions" id="sp-actions"><button class="btn btn-ghost" data-close>Cancelar</button><button class="btn btn-primary" id="sync-go">Conectar</button></div>`, 'sheet-lg');
+  bindSyncPanel(l.sheet, () => { $('#sp-body', l.sheet).innerHTML = inviteHTML(); $('#sp-actions', l.sheet).innerHTML = '<button class="btn btn-primary" data-close>Hecho</button>'; l.onClose = () => scheduleRender(); });
+}
+function bindSyncPanel(root, onOk) {
+  const go = $('#sync-go', root);
+  go.addEventListener('click', async () => {
+    const err = $('#sync-err', root); err.textContent = ''; go.disabled = true; const t0 = go.textContent; go.textContent = 'Conectando…';
+    try { await connectNew($('#db-url', root).value); onOk(); }
+    catch (e) { err.textContent = e.message; go.disabled = false; go.textContent = t0; }
+  });
+}
+
+/* ============================================================
+   Onboarding / invitación
+   ============================================================ */
+let ob = { step: 'names', nameMe: '', nameOther: '' };
+function renderOnboarding() {
+  const v = $('#view');
+  if (ob.step === 'names') {
+    v.innerHTML = `<div class="ob-wrap"><div class="ob-card"><p class="eyebrow">Planificador para dos</p><h1>Pacto</h1>
+      <p class="lead">Las tareas de la semana, repartidas entre los dos. Un vistazo cada día, castigos justos y nada más.</p>
+      <form id="ob-form"><label class="field"><span>Tu nombre</span><input id="ob-me" maxlength="24" autocomplete="given-name" value="${esc(ob.nameMe)}" placeholder="Joaquín" autofocus></label>
+      <label class="field"><span>El nombre de tu pareja</span><input id="ob-ot" maxlength="24" value="${esc(ob.nameOther)}" placeholder="Su nombre"></label>
+      <p class="err" id="ob-err" role="alert"></p><button class="btn btn-primary btn-lg" type="submit">Continuar</button></form>
+      <div style="margin-top:18px"><button class="link" data-act="ob-restore">Ya tengo una copia de seguridad</button><input type="file" id="ob-file" accept="application/json,.json" hidden></div></div></div>`;
+  } else if (ob.step === 'mode') {
+    v.innerHTML = `<div class="ob-wrap"><div class="ob-card"><p class="eyebrow">Un último paso</p><h1 style="font-size:clamp(44px,12vw,72px)">¿Cómo lo usáis?</h1>
+      <div class="choice"><button data-act="ob-sync"><span class="rec">Recomendado</span><b>Compartido en tiempo real</b><span>Los dos veis lo mismo en vuestros móviles. Requiere una base de datos gratuita de Firebase (5 minutos, una sola vez).</span></button>
+      <button data-act="ob-local"><b>Solo en este dispositivo</b><span>Para probarlo ya. Podrás activar la sincronización cuando quieras sin perder nada.</span></button></div>
+      <button class="link" data-act="ob-back">‹ Volver</button></div></div>`;
+  } else if (ob.step === 'sync') {
+    v.innerHTML = `<div class="ob-wrap"><div class="ob-card" style="max-width:600px"><p class="eyebrow">Sincronización</p><h1 style="font-size:clamp(40px,10vw,64px)">Conectar</h1>
+      <div id="sp-body">${syncPanelHTML()}</div><div class="row" style="margin-top:18px" id="sp-actions"><button class="btn btn-primary btn-lg" id="sync-go">Conectar</button><button class="btn btn-ghost" data-act="ob-mode">Atrás</button></div></div></div>`;
+    bindSyncPanel(v, () => { $('#sp-body', v).innerHTML = inviteHTML(); $('#sp-actions', v).innerHTML = '<button class="btn btn-primary btn-lg" data-act="ob-enter">Entrar en Pacto</button>'; });
+  } else if (ob.step === 'join') {
+    const j = ob.join, nmB = ob.joinNames ? ob.joinNames.b : '';
+    v.innerHTML = `<div class="ob-wrap"><div class="ob-card"><p class="eyebrow">Invitación</p><h1 style="font-size:clamp(44px,12vw,76px)">Únete al Pacto</h1>
+      ${ob.joinErr ? `<p class="err" style="font-size:16px">${esc(ob.joinErr)}</p><button class="btn btn-ghost" data-act="ob-cancel-join">Volver</button>`
+      : !ob.joinNames ? '<div class="skel"></div>'
+      : `<p class="lead">${esc(ob.joinNames.a)} te ha invitado a compartir la planificación. ${cfg ? '<b>Este dispositivo ya tiene un Pacto: se sustituirá.</b>' : ''}</p>
+      <form id="join-form"><label class="field"><span>Tu nombre</span><input id="jn-name" maxlength="24" value="${esc(nmB && nmB !== 'Mi pareja' ? nmB : '')}" placeholder="Tu nombre" autofocus></label>
+      <p class="err" id="ob-err" role="alert"></p><button class="btn btn-primary btn-lg" type="submit">Unirme</button></form>`}</div></div>`;
+  }
+  const f = $('#ob-form'); if (f) f.addEventListener('submit', e => {
+    e.preventDefault();
+    ob.nameMe = $('#ob-me').value.trim(); ob.nameOther = $('#ob-ot').value.trim();
+    if (!ob.nameMe || !ob.nameOther) { $('#ob-err').textContent = 'Escribid los dos nombres.'; return; }
+    ob.step = 'mode'; renderOnboarding();
+  });
+  const jf = $('#join-form'); if (jf) jf.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('#jn-name').value.trim(); if (!name) { $('#ob-err').textContent = 'Escribe tu nombre.'; return; }
+    try {
+      const r = await fetchT(`${ob.join.u}/rooms/${ob.join.r}/meta/names/b.json`, { method: 'PUT', headers: JSONH, body: JSON.stringify(name) });
+      if (!r.ok) throw new Error();
+    } catch (x) { $('#ob-err').textContent = 'No se pudo conectar con el Pacto. Inténtalo de nuevo.'; return; }
+    cfg = { mode: 'sync', dbUrl: ob.join.u, room: ob.join.r, me: 'b' }; save(LS.cfg, cfg);
+    S = normalize({}); persist(); pending = []; savePending();
+    history.replaceState(null, '', location.pathname + location.search);
+    ob = { step: 'names', nameMe: '', nameOther: '' }; ui.animate = true; Sync.start(); render();
+  });
+  const of = $('#ob-file'); if (of) of.addEventListener('change', () => { if (of.files[0]) obRestore(of.files[0]); });
+}
+function obRestore(file) {
+  if (file.size > 5 * 1024 * 1024) { toast('La copia supera el límite de 5 MB.'); return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result); if (!d || d.app !== 'pacto' || !d.state) throw 0;
+      S = sanitizeBackupState(d.state); S.lastReview = addDays(todayStr(), -1); if (!Object.keys(S.bank).length) S.bank = defaultBank();
+      cfg = { mode: 'local', me: 'a' }; save(LS.cfg, cfg); persist(); Sync.start(); ui.animate = true; render(); toast('Copia restaurada');
+    } catch (e) { toast('El archivo no es una copia de Pacto'); }
+  };
+  rd.readAsText(file);
+}
+async function startJoin(j) {
+  ob = { step: 'join', join: j, joinNames: null, joinErr: '' };
+  render();
+  if (!j || !validFirebaseUrl(j.u) || !validRoom(j.r)) { ob.joinErr = 'El enlace de invitación no tiene un formato válido de Pacto.'; render(); return; }
+  try {
+    const r = await fetchT(`${j.u}/rooms/${j.r}/meta.json`);
+    if (!r.ok) throw new Error();
+    const meta = await r.json();
+    if (!meta || !meta.names) { ob.joinErr = 'Esta invitación ya no es válida o el Pacto no existe.'; }
+    else ob.joinNames = Object.assign({ a: 'Tu pareja', b: '' }, meta.names);
+  } catch (e) { ob.joinErr = 'No se pudo abrir la invitación. Comprueba tu conexión e inténtalo de nuevo.'; }
+  render();
+}
+
+/* ============================================================
+   Render principal
+   ============================================================ */
+let rafId = 0, deferred = false;
+function scheduleRender() {
+  if (rafId) return;
+  const run = () => { rafId = 0; render(); };
+  rafId = (window.requestAnimationFrame || (f => setTimeout(f, 16)))(run);
+}
+function renderChrome() {
+  const sync = $('#sync');
+  if (sync) {
+    const mode = cfg && cfg.mode === 'sync' ? Sync.status : 'off';
+    sync.className = 'sync ' + (mode === 'online' ? 'on' : mode === 'connecting' ? 'busy' : mode === 'offline' ? 'off' : '');
+    $('#sync-t').textContent = syncLabel();
+    sync.hidden = !cfg;
+  }
+  const tb = $('#theme-btn'); if (tb) tb.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon;
+  const tn = $('#top-new'); if (tn) tn.innerHTML = ICON.plus + '<span>Nueva tarea</span>';
+  const fb = $('#fab'); if (fb) fb.innerHTML = ICON.plus;
+  const nav = $('#nav');
+  if (nav) {
+    if (!cfg) { nav.innerHTML = ''; } else {
+      const nImpose = Object.values(S.punish).filter(p => p.creditor === ME() && p.status === 'pending').length;
+      const tabs = [['today', 'Hoy', ICON.sun], ['mine', 'Mi semana', ICON.cal], ['theirs', nm(oth(ME())), ICON.users], ['punish', 'Castigos', ICON.scale], ['settings', 'Ajustes', ICON.sliders]];
+      nav.innerHTML = tabs.map(([k, n, ic]) => `<button data-act="tab" data-tab="${k}"${ui.tab === k ? ' aria-current="page"' : ''}>${ic}<span class="lbl">${esc(n)}</span>${k === 'punish' && nImpose ? `<span class="badge" aria-label="${nImpose} por imponer">${nImpose}</span>` : ''}</button>`).join('');
+      document.title = (nImpose ? `(${nImpose}) ` : '') + 'Pacto · planificador de dos';
+    }
+  }
+}
+function render() {
+  const view = $('#view'); if (!view) return;
+  const a = document.activeElement;
+  if (cfg && a && view.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { deferred = true; renderChrome(); return; }
+  deferred = false;
+  const app = $('#app');
+  if (!cfg || ob.step === 'join') { app.classList.add('ob'); renderOnboarding(); renderChrome(); return; }
+  app.classList.remove('ob');
+  if (cfg.mode === 'sync' && !Sync.ready && !Sync.timedOut) { view.className = ''; view.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; renderChrome(); return; }
+  const scroll = window.scrollY;
+  let html = '';
+  switch (ui.tab) {
+    case 'mine': html = viewWeek('mine'); break;
+    case 'theirs': html = viewWeek('theirs'); break;
+    case 'punish': html = viewPunish(); break;
+    case 'settings': html = viewSettings(); break;
+    default: html = viewToday();
+  }
+  view.className = ui.animate ? 'enter' : '';
+  view.innerHTML = html;
+  ui.animate = false; ui.pop = null;
+  renderChrome();
+  if (!view.classList.contains('enter')) window.scrollTo(0, scroll);
+}
+function goTab(t) { ui.tab = t; ui.animate = true; render(); window.scrollTo(0, 0); }
+
+/* ============================================================
+   Acciones
+   ============================================================ */
+const ACTIONS = {
+  tab: el => goTab(el.dataset.tab),
+  new: el => openTaskForm(null, { owner: el.dataset.owner, date: el.dataset.date }),
+  toggle: el => { const t = S.tasks[el.dataset.id]; if (t) toggleDone(t, el.dataset.date); },
+  edit: el => { const t = S.tasks[el.dataset.id]; if (t) openTaskForm(t); },
+  view: el => { const t = S.tasks[el.dataset.id]; if (t) openTaskView(t); },
+  week: el => { const w = el.dataset.w, d = Number(el.dataset.d); ui.off[w] = d === 0 ? 0 : ui.off[w] + d; ui.animate = true; render(); },
+  impose: el => openImpose(el.dataset.pid),
+  forgive: el => forgive(el.dataset.pid),
+  theme: () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'),
+  'set-theme': el => setTheme(el.dataset.v),
+  'set-me': el => { cfg.me = el.dataset.v; save(LS.cfg, cfg); render(); },
+  'import-plan': () => openImportPlan(),
+  export: () => exportData(),
+  'import-json': () => $('#file-json').click(),
+  'copy-rules': async () => toast((await copyText(RULES)) ? 'Reglas copiadas' : 'No se pudo copiar'),
+  'copy-invite': async () => toast((await copyText(inviteLink())) ? 'Enlace copiado' : 'No se pudo copiar'),
+  'copy-invite2': async () => toast((await copyText(inviteLink())) ? 'Enlace copiado' : 'No se pudo copiar'),
+  'share-invite': () => { navigator.share({ title: 'Pacto', text: 'Únete a nuestro Pacto', url: inviteLink() }).catch(() => {}); },
+  'sync-on': () => openSyncSetup(),
+  'sync-off': async () => {
+    if (!await confirmBox({ title: '¿Desconectar?', text: 'Este dispositivo conservará una copia, pero dejará de sincronizarse con la nube.', ok: 'Desconectar', danger: true })) return;
+    Sync.stop(); cfg = { mode: 'local', me: ME() }; save(LS.cfg, cfg); pending = []; savePending(); Sync.ready = true; render(); toast('Sincronización desactivada');
+  },
+  notif: async () => {
+    if (typeof Notification === 'undefined') { toast('Tu navegador no admite avisos'); return; }
+    const r = await Notification.requestPermission(); toast(r === 'granted' ? 'Avisos activados' : 'Avisos no permitidos'); render();
+  },
+  'bank-add': () => {
+    const t = $('#nb-title').value.trim(); if (!t) { $('#nb-title').focus(); return; }
+    const id = newId('k'); commit({ [`bank/${id}`]: { title: t, cost: Number($('#nb-cost').value) || 2 } });
+  },
+  'bank-del': el => commit({ [`bank/${el.dataset.id}`]: null }),
+  reset: async () => {
+    if (!await confirmBox({ title: '¿Vaciar todas las tareas?', text: 'Se borran tareas, historial y castigos para los dos. Los nombres y el banco de castigos se conservan. Antes puedes descargar una copia.', ok: 'Vaciar todo', danger: true })) return;
+    const ns = freshState(S.meta.names.a, S.meta.names.b); ns.bank = clone(S.bank); ns.meta.settings = clone(S.meta.settings);
+    commit({ '/': ns }); toast('Todo vacío');
+  },
+  forget: async () => {
+    if (!await confirmBox({ title: '¿Olvidar este dispositivo?', text: cfg.mode === 'sync' ? 'Se borra la copia local. Vuestro Pacto sigue en la nube y podrás volver a entrar con el enlace de invitación.' : 'Se borran TODOS los datos de este dispositivo. Descarga antes una copia si no quieres perderlos.', ok: 'Olvidar', danger: true })) return;
+    try { [LS.cfg, LS.state, LS.pending].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    location.href = location.pathname;
+  },
+  'ob-local': () => {
+    S = freshState(ob.nameMe, ob.nameOther); cfg = { mode: 'local', me: 'a' }; save(LS.cfg, cfg); persist(); Sync.start(); ui.animate = true; render();
+  },
+  'ob-sync': () => { S = freshState(ob.nameMe, ob.nameOther); cfg = { mode: 'local', me: 'a' }; persist(); ob.step = 'sync'; renderOnboarding(); },
+  'ob-mode': () => { cfg = null; ob.step = 'mode'; renderOnboarding(); },
+  'ob-back': () => { ob.step = 'names'; renderOnboarding(); },
+  'ob-enter': () => { ui.animate = true; render(); },
+  'ob-restore': () => $('#ob-file').click(),
+  'ob-cancel-join': () => { history.replaceState(null, '', location.pathname + location.search); ob = { step: 'names', nameMe: '', nameOther: '' }; render(); }
+};
+function setTheme(p) {
+  try { localStorage.setItem(LS.theme, p); } catch (e) {}
+  const dark = p === 'dark' || (p === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const r = document.documentElement; r.dataset.theme = dark ? 'dark' : 'light'; r.dataset.pref = p;
+  const m = $('meta[name=theme-color]'); if (m) m.content = dark ? '#17100C' : '#F4ECDF';
+  render();
+}
+
+document.addEventListener('click', e => {
+  const cl = e.target.closest('[data-close]');
+  if (cl) { const el = cl.closest('.layer'); const ly = layers.find(x => x.el === el); if (ly) ly.close(); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const h = ACTIONS[el.dataset.act];
+  if (h) h(el, e);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.name) { const v = t.value.trim().slice(0, 24); if (v) commit({ [`meta/names/${t.dataset.name}`]: v }); else t.value = nm(t.dataset.name); }
+  else if (t.dataset.setting === 'rotation') { const u = { 'meta/settings/rotation': t.checked }; if (t.checked) u['meta/settings/rotationAnchor'] = mondayOf(todayStr()); commit(u); toast(t.checked ? 'Rotación activada: esta semana es el plan base.' : 'Rotación desactivada.'); }
+  else if (t.dataset.setting) commit({ [`meta/settings/${t.dataset.setting}`]: t.checked });
+  else if (t.dataset.bankTitle) { const v = t.value.trim(); if (v) commit({ [`bank/${t.dataset.bankTitle}/title`]: v }); else t.value = (S.bank[t.dataset.bankTitle] || {}).title || ''; }
+  else if (t.dataset.bankCost) commit({ [`bank/${t.dataset.bankCost}/cost`]: Number(t.value) || 1 });
+  else if (t.id === 'file-json' && t.files[0]) { importJsonFile(t.files[0]); t.value = ''; }
+});
+document.addEventListener('focusout', () => { setTimeout(() => { const a = document.activeElement; if (deferred && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) scheduleRender(); }, 60); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && layers.length) { layers[layers.length - 1].close(); return; }
+  if (e.key === 'n' && !layers.length && cfg && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); openTaskForm(null, { owner: ui.tab === 'theirs' ? oth(ME()) : ME() }); }
+});
+
+/* ============================================================
+   Arranque
+   ============================================================ */
+function tick() {
+  const d = todayStr();
+  if (d !== ui.day) { ui.day = d; runReview(); scheduleRender(); }
+  else if (cfg && Sync.ready && S.lastReview && S.lastReview < addDays(d, -1)) runReview();
+}
+function boot() {
+  renderChrome();
+  const m = location.hash.match(/^#j=([A-Za-z0-9_-]+)$/);
+  if (m) {
+    try { const j = JSON.parse(b64dec(m[1])); if (j && validFirebaseUrl(j.u) && validRoom(j.r)) { Sync.ready = true; startJoin(j); initTimers(); return; } } catch (e) {}
+  }
+  if (cfg && cfg.mode === 'sync') Sync.start(); else Sync.ready = true;
+  if (cfg && Sync.ready) runReview();
+  render(); initTimers();
+}
+function initTimers() {
+  setInterval(tick, 15000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    tick(); if (cfg && cfg.mode === 'sync' && Sync.ready) { Sync.pull(); Sync.flush(); }
+  });
+  window.addEventListener('online', () => { if (cfg && cfg.mode === 'sync') { Sync.connect(); Sync.flush(); } });
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((document.documentElement.dataset.pref || 'auto') === 'auto') setTheme('auto'); }); } catch (e) {}
+}
+window.__pacto = { get S() { return S; }, get cfg() { return cfg; }, get pending() { return pending; }, commit, runReview, parsePlan, occursOn, tasksFor, flexFor, doneKey, punishId, toggleDone, saveTaskFrom, deleteTask, Sync, setCfg(c) { cfg = c; }, ui, render, streak, weekStats, dayStats, forgive, openImpose, freshState };
+boot();
+})();
+</script>
+</body>
+</html>
